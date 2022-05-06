@@ -1,5 +1,5 @@
 . ./Get-UDFWeekofYear.ps1
-. ./Create-BinaryIndex.ps1
+. ./Create-AsciiIndex.ps1
 
 $Span             = @{}
 $Span.offSet      = 0
