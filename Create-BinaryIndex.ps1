@@ -1,4 +1,4 @@
-function Create-BinaryIndex($string){
+function Create-AsciiIndex($string){
     $asciitochar   = @{}
     $ihartoascii   = @{}
     $asciitobinary = @{}
