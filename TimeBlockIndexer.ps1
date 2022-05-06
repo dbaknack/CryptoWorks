@@ -1,89 +1,146 @@
-$a001   = new-timespan -Days 1
-$a002   = $a001.TotalSeconds/15
-$0      = [ordered]@{}
-$0.1 = @{}
+. ./Get-UDFWeekofYear.ps1
+. ./Create-BinaryIndex.ps1
+###################################################################################################################################
+$Span             = @{}
+$Span.offSet      = 0
+$Span.day         = New-TimeSpan -Days 1
+$Span.inBlocks    = $Span.day/15
+$rootObject       = [ordered]@{}
+$rootObject.block = [ordered]@{}
+$rootObject.block.ID = [ordered]@{}
+###################################################################################################################################
+$TimeSegment       = @{}
+$TimeSegment.Start = @{}
+$TimeSegment.End   = @{}
+###################################################################################################################################
+$DateTimeProps                             = @{}
+$DateTimeProps.seedWeekDay                 = @{}
+$DateTimeProps.seedWeekDay.Props           = @{}
+$DateTimeProps.dateFromat                  = "yyyy-MM-dd 00:00:00.00"
+$DateTimeProps.dateTimeSeed                = ([DateTime]((Get-Date).AddDays($Span.offSet)).ToString($DateTimeProps.dateFromat )).ToString($DateTimeProps.dateFromat)
+$DateTimeProps.seedWeekDay.Props.shortName = ([DateTime]$DateTimeProps.dateTimeSeed).toString('ddd')
+$DateTimeProps.seedWeekDay.Props.Binary    = Create-BinaryIndex -string $DateTimeProps.seedWeekDay.Props.shortName
+$DateTimeProps.seedWeekofYear              = Get-UDFWeekofYear -date ([DateTime]$DateTimeProps.dateTimeSeed)
+$DateTimeProps.seedMonth                   = [int]([DateTime]$DateTimeProps.dateTimeSeed).Month
+$DateTimeProps.seedDayofMonth              = [int]([DateTime]$DateTimeProps.dateTimeSeed).Day
+$DateTimeProps.seedDayofYear               = ([DateTime]$DateTimeProps.dateTimeSeed).DayOfYear
+$DateTimeProps.seedYear                    = ([DateTime]$DateTimeProps.dateTimeSeed).Year
+###################################################################################################################################
+foreach($i in (1..($Span.inBlocks.TotalSeconds))){
+    if($i -eq 1)    {$Start = [datetime]$DateTimeProps.dateTimeSeed}
+    if(!($i -eq 1)) {$Start = $End}
+    $Span.block = New-TimeSpan -Seconds 15
+    $End        = $Start.AddSeconds($Span.block.seconds)
+###################################################################################################################################
+    if($Start.Second -eq 0)  {$SpanID = '01'}
+    if($Start.Second -eq 15) {$SpanID = '02'}
+    if($Start.Second -eq 30) {$SpanID = '03'}
+    if($Start.Second -eq 45) {$SpanID = '04'}
+###################################################################################################################################
+    $TimeSegment.Start.hour   = $Start.Hour
+    $TimeSegment.Start.minute = $Start.Minute
+    $TimeSegment.Start.second = $Start.Second
+    $TimeSegment.End.hour     = $end.Hour
+    $TimeSegment.End.minute   = $end.Minute
+    $TimeSegment.End.second   = $end.Second
+###################################################################################################################################
+    #weekofYear
+    $woyID = $($DateTimeProps.seedWeekofYear)
+    if($woyID -le [int](('1'+'0')- 1)) {$woyID = "0"+"$($woyID)"}
+    if($woyID -ge [int](('1'+'0')))    {$woyID = $woyID = $woyID}
+###################################################################################################################################
+    #daynameID
+    $nameDayID = $DateTimeProps.seedWeekDay.Props.shortName
+    if($nameDayID  -match  'MON') {$dayID = '1'}
+    if($nameDayID  -match  'TUE') {$dayID = '2'}
+    if($nameDayID  -match  'WED') {$dayID = '3'}
+    if($nameDayID  -match  'THU') {$dayID = '4'}
+    if($nameDayID  -match  'FRI') {$dayID = '5'}
+    if($nameDayID  -match  'SAT') {$dayID = '6'}
+    if($nameDayID  -match  'SUN') {$dayID = '7'}
+###################################################################################################################################
+    #daytype
+    if($dayID -le 5)  {$dayTypeID = 'weekday'}
+    if($dayID -ge 6)  {$dayTypeID = 'weekend'}
 
-  $a003  = [datetime]((get-date).AddDays(236)).ToString("yyyy-MM-dd 00:00:00.00")
-  $a00301 = $a003.DayOfYear
-  $a00302 = $a003.Year
-  $a00303 = $a003.Month
-  $a00304 = $a003.toString('ddd').toupper()
-foreach($c in (1..($a002))){
-
-    if($c -eq 1){$c001 = $a003}
-    else{$c001 = $c002}
-    $s0001 = New-TimeSpan -Seconds 15
-    $c002   = $c001.AddSeconds($s0001.TotalSeconds)
-    if($c001.Second -eq 0){$C0101 = '01'}
-    if($c001.Second -eq 15){$C0101 = '02'}
-    if($c001.Second -eq 30){$C0101 = '03'}
-    if($c001.Second -eq 45){$C0101 = '04'}
-    $ca = $c001.hour
-    $cb = $c001.Minute
-    $cd = $c001.Second
-
-    if($a00304 -match 'MON')    {$c04  =  '01'}
-    if($a00304 -match 'MON')    {$c041 = 'StartofWeek'}
-    if($a00304 -match 'TUE')    {$c04  =  '02'}
-    if($a00304 -match 'WED')    {$c04  =  '03'}
-    if($a00304 -match 'THU')    {$c04  =  '04'}
-    if($a00304 -match 'FRI')    {$c04  =  '05'}
-    if($a00304 -match 'SAT')    {$c04  =  '06'}
-    if($a00304 -match 'SUN')    {$c04  =  '07'}
-    if($a00304 -match 'SAT')    {$c042 = 'WND'}
-    if($a00304 -match 'SUN')    {$c042 = 'WND'}
-    if(!($a00304 -match 'SAT')) {$c042 = 'WDY'}
-    if(!($a00304 -match 'SUN')) {$c042 = 'WDY'}
-    $c02 ='|'
-    if($ca -le 9) {$ca = "0$ca"}
-    if($cb -le 9) {$cb = "0$cb"}
-    if($cd -le 9) {$cd = "0$cd"}
-
-    if($a00303 -le 9)                           {$_03 = "0"+"$a00303"}
-    if($a00303 -ge 9)                           {$_03 = $a00303}
-
-    if($a00301 -le 9)                           {$_01 = "00$a00301"}
-    if($a00301 -gt 9 -and $a00301 -le 99)           {$_01 = "0$a00301"}
-    if($a00301 -ge 100)                         {$_01 = "$a00301"}
-
-    if($c -le 9)                            {$c01 = [int]"00000000$c"}
-    if($c -gt 9 -and $c -le 99)             {$c01 = [int]"0000000$c"}
-    if($c -ge 100 -and $c -le 999)          {$c01 = [int]"000000$c"}
-    if($c -ge 1000 -and $c -le 9999)        {$c01 = [int]"00000$c"}
-    if($c -ge 10000 -and $c -le 99999)      {$c01 = [int]"0000$c"}
-    if($c -ge 100000 -and $c -le 999999)    {$c01 = [int]"000$c"}
-    if($c -ge 1000000 -and $c -le 9999999)  {$c01 = [int]"00$c"}
-    if($c -ge 10000000 -and $c -le 99999999){$c01 = [int]"0$c"}
-    if($c -ge 100000000)                    {$c01 = [int]$c}
-    #"$6-$C0101-$c-$a00302-$a00303-$3-$a00301-$ca-$cb-$cd"
-    $0.'1'.add($c01,@{})
-    $0.'1'.$c01.add(1,"$c042$c02$a00304$c02$C0101$c02$c01$c02$a00302$c02$_03$c02$c04$c02$_01$c02$ca$c02$cb$c02$cd")
-    $0.'1'.$c01.add(2,$c001)
-    $0.'1'.$c01.add(3,$s0001)
-    $0.'1'.$c01.add(4,$c002)
-    #$obj.block[$c].end
+    $dayID = "0$dayID"
+###################################################################################################################################
+    $hrID = $TimeSegment.Start.hour
+    $mnID = $TimeSegment.Start.minute
+    $snID = $TimeSegment.Start.second
+    if($hrID -le 9) {$hrID = "0$hrID"}
+    if($mnID -le 9) {$mnID = "0$mnID"}
+    if($snID -le 9) {$snID = "0$snID"}
+###################################################################################################################################
+    #yearID
+    $yearID = $DateTimeProps.seedYear
+###################################################################################################################################
+    #dayofYearID
+    $doyID = $DateTimeProps.seedDayofYear 
+    if($doyID -le 9)                    {$doyID = "00$($doyID)"}
+    if($doyID -gt 9 -and $doyID -le 99) {$doyID = "0$($doyID)"}
+    if($doyID -ge 100)                  {$doyID = "$($doyID)"}
+###################################################################################################################################
+    # BlockID
+    if($i -le [int]('1'+'0')-1)                          {$blockID = "$('0'*8)$i"}
+    if($i -ge [int]('1'+'0'*1) -and $i -le [int]('9'*2)) {$blockID = "$('0'*7)$i"}
+    if($i -ge [int]('1'+'0'*2) -and $i -le [int]('9'*3)) {$blockID = "$('0'*6)$i"}
+    if($i -ge [int]('1'+'0'*3) -and $i -le [int]('9'*4)) {$blockID = "$('0'*5)$i"}
+    if($i -ge [int]('1'+'0'*4) -and $i -le [int]('9'*5)) {$blockID = "$('0'*4)$i"}
+    if($i -ge [int]('1'+'0'*5) -and $i -le [int]('9'*6)) {$blockID = "$('0'*3)$i"}
+    if($i -ge [int]('1'+'0'*6) -and $i -le [int]('9'*7)) {$blockID = "$('0'*2)$i"}
+    if($i -ge [int]('1'+'0'*7) -and $i -le [int]('9'*9)) {$blockID = "$('0'*1)$i"}
+    if($i -ge [int]('1'+'0'*8))                          {$blockID = $i}
+###################################################################################################################################
+    # monthID
+    $monthID = $DateTimeProps.seedMonth
+    if($monthID -le [int](('1'+'0')- 1))    {$monthID = "0"+"$($monthID)"}
+    if($monthID -ge [int](('1'+'0')))       {$monthID = $monthID}
+###################################################################################################################################
+    # dayofMonthID
+    $domID = $DateTimeProps.seedDayofMonth
+    if($domID -le [int](('1'+'0')- 1))  {$domID = "$('0'+$domID)"}
+    if($domID -ge [int](('1'+'0')))     {$domID = $domID}
+###################################################################################################################################
+    $dowConvertedIDArray = ($DateTimeProps.seedWeekDay.Props.Binary).Split('.')
+    $dowID = $null
+    $dowConvertedIDArray | foreach{
+        $x = [int]$_
+        if($x -le [int](('1'+'00')- 1))    {$x = "0"+"$($x)"}
+        if($x -ge [int](('1'+'00')- 1))    {$x = "$($x)"}
+        $dowID += $x
+    }
+###################################################################################################################################
+    $globalID = "$($SpanID)$($snID)$($yearID)$($monthID)$($woyID)$($doyID)$($domID)$($dayID)$($hrID)$($weekdayconverted)$($minID)$($blockID)"
+###################################################################################################################################
+    $rootObject.block.ID+= @{
+       "$blockID" = @{
+           'parameters' = [ordered]@{
+                SpanID            = $($SpanID)
+                SecondofMin       = $($snID)
+                GlobalID          = $($globalID)
+                Year              = $($yearID)
+                MonthofYear       = $($monthID)
+                WeekofYear        = $($woyID)
+                DayofYear         = $($doyID)
+                DayofMonth        = $($domID)
+                DayofWeek         = $($dayID)
+                HourofDay         = $($hrID)
+                MinuteofHr        = $($mnID)
+                StartofSpan       = $Start.ToString("yyyy-MM-dd HH:mm:ss.00")
+                EndtofSpan        = $End.ToString("yyyy-MM-dd HH:mm:ss.00")  
+                DayofWeekName     = $($nameDayID)
+                DayofWeekAscii    = $($dowID)
+                WeekDayDesc       = $($dayTypeID)
+                BlockID           = $($blockID)
+           }
+       }
+    }
+    $rootObject.block.ID[$blockID].StartofSpan  = $Start.ToString("yyyy-MM-dd HH:mm:ss.00")                                   
+    $rootObject.block.ID[$blockID].EndofSpan    = $End.ToString("yyyy-MM-dd HH:mm:ss")
 }
 
-($0.'1'[000004892])[1]
-
-
-
-$asciitochar   = @{}
-$chartoascii   = @{}
-$asciitobinary =@{}
-97..122 | ForEach-Object {$asciitochar.add($_,([char]$_).toString())}
-foreach($k in $asciitochar.keys){$chartoascii.add($asciitochar[$k],$k)}
-foreach($k in $asciitochar.keys){$asciitobinary.add($k,[convert]::ToString($k,2))}
-
- $ascii = [ordered]@{}
-0..122 | ForEach-Object {
-    $int   = [int]$_
-    $ascii = ([char]$int)
-    [convert]::ToString($int,2)
+foreach($key in $rootObject.block.ID.keys){
+    ($rootObject.block.ID)[5759]
+    ($rootObject.block.ID)[0]
 }
-$string = 'SUN'
-$string = $string.ToCharArray() |%{$chartoascii["$_"]}
-[convert]::ToString($string[0],2)
-$string |%{$ascii[$_]}
-
-
