@@ -62,7 +62,6 @@ foreach($i in (1..($Span.inBlocks.TotalSeconds))){
     #daytype
     if($dayID -le 5)  {$dayTypeID = 'weekday'}
     if($dayID -ge 6)  {$dayTypeID = 'weekend'}
-
     $dayID = "0$dayID"
 
     $hrID = $TimeSegment.Start.hour
@@ -104,7 +103,7 @@ foreach($i in (1..($Span.inBlocks.TotalSeconds))){
 
     $dowConvertedIDArray = ($DateTimeProps.seedWeekDay.Props.Binary).Split('.')
     $dowID = $null
-    $dowConvertedIDArray | foreach{
+    $dowConvertedIDArray | ForEach-Object{
         $x = [int]$_
         if($x -le [int](('1'+'00')- 1))    {$x = "0"+"$($x)"}
         if($x -ge [int](('1'+'00')- 1))    {$x = "$($x)"}
@@ -116,26 +115,26 @@ foreach($i in (1..($Span.inBlocks.TotalSeconds))){
     $rootObject.block.ID+= @{
        "$blockID" = @{
            'parameters' = [ordered]@{
-                SpanID            = $($SpanID)
-                SecondofMin       = $($snID)
-                GlobalID          = $($globalID)
-                Year              = $($yearID)
-                MonthofYear       = $($monthID)
-                WeekofYear        = $($woyID)
-                DayofYear         = $($doyID)
-                DayofMonth        = $($domID)
-                DayofWeek         = $($dayID)
-                HourofDay         = $($hrID)
-                MinuteofHr        = $($mnID)
-                StartofSpan       = $Start.ToString("yyyy-MM-dd HH:mm:ss.00")
-                EndtofSpan        = $End.ToString("yyyy-MM-dd HH:mm:ss.00")  
-                DayofWeekName     = $($nameDayID)
-                DayofWeekAscii    = $($dowID)
-                WeekDayDesc       = $($dayTypeID)
-                BlockID           = $($blockID)
+                SpanID         = $($SpanID)
+                SecondofMin    = $($snID)
+                GlobalID       = $($globalID)
+                Year           = $($yearID)
+                MonthofYear    = $($monthID)
+                WeekofYear     = $($woyID)
+                DayofYear      = $($doyID)
+                DayofMonth     = $($domID)
+                DayofWeek      = $($dayID)
+                HourofDay      = $($hrID)
+                MinuteofHr     = $($mnID)
+                StartofSpan    = $Start.ToString("yyyy-MM-dd HH:mm:ss.00")
+                EndtofSpan     = $End.ToString("yyyy-MM-dd HH:mm:ss.00")
+                DayofWeekName  = $($nameDayID)
+                DayofWeekAscii = $($dowID)
+                WeekDayDesc    = $($dayTypeID)
+                BlockID        = $($blockID)
            }
        }
     }
-    $rootObject.block.ID[$blockID].StartofSpan  = $Start.ToString("yyyy-MM-dd HH:mm:ss.00")                                   
-    $rootObject.block.ID[$blockID].EndofSpan    = $End.ToString("yyyy-MM-dd HH:mm:ss.00")
+    $rootObject.block.ID[$blockID].StartofSpan = $Start.ToString("yyyy-MM-dd HH:mm:ss.00")
+    $rootObject.block.ID[$blockID].EndofSpan   = $End.ToString("yyyy-MM-dd HH:mm:ss.00")
 }
