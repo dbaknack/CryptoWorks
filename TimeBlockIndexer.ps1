@@ -1,6 +1,7 @@
 . ./Get-UDFWeekofYear.ps1
 . ./Create-AsciiIndex.ps1
 
+
 $Span             = @{}
 $Span.offSet      = 0
 $Span.day         = New-TimeSpan -Days 1
@@ -118,7 +119,7 @@ foreach($i in (1..($Span.inBlocks.TotalSeconds))){
                 SpanID         = $($SpanID)
                 SecondofMin    = $($snID)
                 GlobalID       = $($globalID)
-                Year           = $($yearID)
+                YearID         = $($yearID)
                 MonthofYear    = $($monthID)
                 WeekofYear     = $($woyID)
                 DayofYear      = $($doyID)
