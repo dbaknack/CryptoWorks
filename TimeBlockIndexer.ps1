@@ -1,11 +1,10 @@
 . ./Get-UDFWeekofYear.ps1
 . ./Create-AsciiIndex.ps1
-
-
+$TSQLinsert = (get-content ./insert.sql)
 $Span             = @{}
 $Span.offSet      = 0
 $Span.day         = New-TimeSpan -Days 1
-$Span.inBlocks    = $Span.day/15
+$Span.inBlocks    = $Span.day.TotalSeconds/15
 $rootObject       = [ordered]@{}
 $rootObject.block = [ordered]@{}
 $rootObject.block.ID = [ordered]@{}
@@ -27,7 +26,7 @@ $DateTimeProps.seedDayofMonth              = [int]([DateTime]$DateTimeProps.date
 $DateTimeProps.seedDayofYear               = ([DateTime]$DateTimeProps.dateTimeSeed).DayOfYear
 $DateTimeProps.seedYear                    = ([DateTime]$DateTimeProps.dateTimeSeed).Year
 
-foreach($i in (1..($Span.inBlocks.TotalSeconds))){
+foreach($i in (1..($Span.inBlocks))){
     if($i -eq 1)    {$Start = [datetime]$DateTimeProps.dateTimeSeed}
     if(!($i -eq 1)) {$Start = $End}
     $Span.block = New-TimeSpan -Seconds 15
@@ -136,6 +135,13 @@ foreach($i in (1..($Span.inBlocks.TotalSeconds))){
            }
        }
     }
-    $rootObject.block.ID[$blockID].StartofSpan = $Start.ToString("yyyy-MM-dd HH:mm:ss.00")
-    $rootObject.block.ID[$blockID].EndofSpan   = $End.ToString("yyyy-MM-dd HH:mm:ss.00")
+
+    $string = $null
+    foreach($key in $rootObject.block.id[$blockID].parameters.keys){
+        $string +="'$($x.$key)',"
+    }
+    $string = [string]($string.Substring(0,$string.Length-1))
+    $TSQLinsert -f $("$string")
+
 }
+

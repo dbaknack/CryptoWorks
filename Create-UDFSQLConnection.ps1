@@ -19,7 +19,7 @@ function Invoke-UDFSQLCommand{
             Server              ='$($InstanceName)';
             Integrated Security = true;
             User ID             ='$($SQLUser)';
-            Application Name        = $($authType);
+            Application Name    = $($processName);
             Password            ='$($Password)';
             Initial Catalog     = '$($DatabaseName)'"
     }
@@ -27,7 +27,7 @@ function Invoke-UDFSQLCommand{
         $connectionString = "
             Server              ='$($InstanceName)';
             Integrated Security = true;
-            Application Name        = $($authType);
+            Application Name    = $($processName);
             Initial Catalog     = 'master'"
     }
     $sqlConnection                  = New-Object System.Data.SqlClient.sqlConnection

@@ -21,7 +21,7 @@ CREATE TABLE dbo.TimeIndex
     StartofSpan datetime2 NOT NULL,
     EndtofSpan datetime2 NOT NULL,
     DayofWeekName datetime2 NOT NULL,
-    DayofWeekAscii datetime2 NOT NULL,
+    DayofWeekAscii BIGINT NOT NULL,
     WeekDayDesc datetime2 NOT NULL,
     BlockID varchar(9) NOT NULL
 );
