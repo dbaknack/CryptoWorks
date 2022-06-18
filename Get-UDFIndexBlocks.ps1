@@ -20,6 +20,7 @@ function Get-UDFIndexBlocks{
         $TimeSegment.Start = @{}
         $TimeSegment.End   = @{}
         
+        
         $DateTimeProps                             = @{}
         $DateTimeProps.seedWeekDay                 = @{}
         $DateTimeProps.seedWeekDay.Props           = @{}
@@ -36,7 +37,10 @@ function Get-UDFIndexBlocks{
     }
     
     process {
+
         foreach($i in (1..($Span.inBlocks))){
+
+    
             if($i -eq 1)    {$Start = [datetime]$DateTimeProps.dateTimeSeed}
             if(!($i -eq 1)) {$Start = $End}
             $Span.block = New-TimeSpan -Seconds 15
@@ -90,8 +94,8 @@ function Get-UDFIndexBlocks{
             if($doyID -gt 9 -and $doyID -le 99) {$doyID = "0$($doyID)"}
             if($doyID -ge 100)                  {$doyID = "$($doyID)"}
         
-            #blockID
-            $blockID = $i
+            #SegmentID
+            $SegmentID = $i
         
             # monthID
             $monthID = $DateTimeProps.seedMonth
@@ -112,14 +116,14 @@ function Get-UDFIndexBlocks{
                 $dowID += $x
             }
            
-            $RawData = "'$($blockID)','$($SpanID)','$($snID)','5','$($yearID)','$($monthID)','$($woyID)','$($doyID)','$($domID)','$($dayID)','$($hrID)','$($mnID)','$($Start.ToString("yyyy-MM-dd HH:mm:ss.00"))','$( $End.ToString("yyyy-MM-dd HH:mm:ss.00"))','$($($nameDayID))','$($dowID)','$($dayTypeID)'"
+            $RawData = "'5','$($segmentEnum)','$($SpanID)','$($snID)','$($yearID)','$($monthID)','$($woyID)','$($doyID)','$($domID)','$($dayID)','$($hrID)','$($mnID)','$($Start.ToString("yyyy-MM-dd HH:mm:ss.00"))','$( $End.ToString("yyyy-MM-dd HH:mm:ss.00"))','$($($nameDayID))','$($dowID)','$($dayTypeID)'"
             $rootObject.blocks+= @{
-                "$blockID" = @{
+                "$SegmentID" = @{
                    'ObjectParams' = [ordered]@{
-                        BlockID        = $($blockID)
+                        RequestCounter = 5
+                        SegmentID      = $($SegmentID)
                         SpanID         = $($SpanID)
                         SecondofMin    = $($snID)
-                        RequestCount    = 5
                         YearID         = $($yearID)
                         MonthofYear    = $($monthID)
                         WeekofYear     = $($woyID)

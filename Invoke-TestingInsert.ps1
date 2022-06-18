@@ -27,7 +27,8 @@ foreach($key in $ref.blocks.keys){
     $insertString = "
     set nocount on
     INSERT INTO [dbo].[TimeIndex](
-        [BlockID]
+         [RequestCounter]
+        ,[SegmentID]
         ,[SpanID]
         ,[SecondofMin]
         ,[YearID]
@@ -45,7 +46,8 @@ foreach($key in $ref.blocks.keys){
         ,[WeekDayDesc]
     )
     VALUES(
-        $($block.BlockID)
+         $($block.RequestCounter)
+        ,$($block.SegmentID)
         ,$($block.SpanID)
         ,$($block.SecondofMin)
         ,$($block.YearID)
