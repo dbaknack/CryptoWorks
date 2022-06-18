@@ -98,7 +98,7 @@ function Get-UDFIndexBlocks{
             if($monthID -le [int](('1'+'0')- 1))    {$monthID = "0"+"$($monthID)"}
             if($monthID -ge [int](('1'+'0')))       {$monthID = $monthID}
         
-            # dayofMonthID
+            # dayofMonthID # test
             $domID = $DateTimeProps.seedDayofMonth
             if($domID -le [int](('1'+'0')- 1))  {$domID = "$('0'+$domID)"}
             if($domID -ge [int](('1'+'0')))     {$domID = $domID}
