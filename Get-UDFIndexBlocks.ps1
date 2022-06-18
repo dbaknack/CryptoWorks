@@ -112,13 +112,14 @@ function Get-UDFIndexBlocks{
                 $dowID += $x
             }
            
-            $RawData = "'$($blockID)','$($SpanID)','$($snID)','$($yearID)','$($monthID)','$($woyID)','$($doyID)','$($domID)','$($dayID)','$($hrID)','$($mnID)','$($Start.ToString("yyyy-MM-dd HH:mm:ss.00"))','$( $End.ToString("yyyy-MM-dd HH:mm:ss.00"))','$($($nameDayID))','$($dowID)','$($dayTypeID)'"
+            $RawData = "'$($blockID)','$($SpanID)','$($snID)','5','$($yearID)','$($monthID)','$($woyID)','$($doyID)','$($domID)','$($dayID)','$($hrID)','$($mnID)','$($Start.ToString("yyyy-MM-dd HH:mm:ss.00"))','$( $End.ToString("yyyy-MM-dd HH:mm:ss.00"))','$($($nameDayID))','$($dowID)','$($dayTypeID)'"
             $rootObject.blocks+= @{
                 "$blockID" = @{
                    'ObjectParams' = [ordered]@{
                         BlockID        = $($blockID)
                         SpanID         = $($SpanID)
                         SecondofMin    = $($snID)
+                        RequestCount    = 5
                         YearID         = $($yearID)
                         MonthofYear    = $($monthID)
                         WeekofYear     = $($woyID)
