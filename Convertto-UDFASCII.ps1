@@ -1,4 +1,4 @@
-function Create-AsciiIndex($string){
+function Convertto-UDFASCII($string){
     $asciitochar   = @{}
     $ihartoascii   = @{}
     $asciitobinary = @{}
@@ -9,7 +9,7 @@ function Create-AsciiIndex($string){
     $collection = $null
     $countloop = 1
     $totalCharinString = ($string.tocharArray()).count
-    $string = $string.ToCharArray() |%{$ihartoascii["$_"]}
+    $string = $string.ToCharArray() |ForEach-Object{$ihartoascii["$_"]}
     foreach($char in $string){
         if($totalCharinString -gt $countloop){$collection +="$char"+'.'}
         if($totalCharinString -eq $countloop){$collection +="$char"}

@@ -1,14 +1,19 @@
+$StopWatch = [System.Diagnostics.Stopwatch]::new()
+$StopWatch.Start()
+
+
 . ./Get-UDFWeekofYear.ps1
-. ./Create-AsciiIndex.ps1
-$TSQLinsert = (get-content ./insert.sql)
+. ./Convertto-UDFASCII.ps1
+"$($StopWatch.Elapsed.TotalMilliseconds  ) Elapsed millisec(s) > load dependecies"
 $Span             = @{}
 $Span.offSet      = 0
 $Span.day         = New-TimeSpan -Days 1
 $Span.inBlocks    = $Span.day.TotalSeconds/15
-$rootObject       = [ordered]@{}
-$rootObject.block = [ordered]@{}
-$rootObject.block.ID = [ordered]@{}
+$rootObject       =  [ordered]@{}
+$rootObject.blocks = New-Object System.Collections.Generic.List[pscustomobject]
 
+#$rootObject.blocks.ID = [ordered]@{}
+($rootObject).GetType()
 $TimeSegment       = @{}
 $TimeSegment.Start = @{}
 $TimeSegment.End   = @{}
@@ -19,13 +24,13 @@ $DateTimeProps.seedWeekDay.Props           = @{}
 $DateTimeProps.dateFromat                  = "yyyy-MM-dd 00:00:00.00"
 $DateTimeProps.dateTimeSeed                = ([DateTime]((Get-Date).AddDays($Span.offSet)).ToString($DateTimeProps.dateFromat )).ToString($DateTimeProps.dateFromat)
 $DateTimeProps.seedWeekDay.Props.shortName = ([DateTime]$DateTimeProps.dateTimeSeed).toString('ddd')
-$DateTimeProps.seedWeekDay.Props.Binary    = Create-AsciiIndex -string $DateTimeProps.seedWeekDay.Props.shortName
+$DateTimeProps.seedWeekDay.Props.ASCII    = Convertto-UDFASCII -string $DateTimeProps.seedWeekDay.Props.shortName
 $DateTimeProps.seedWeekofYear              = Get-UDFWeekofYear -date ([DateTime]$DateTimeProps.dateTimeSeed)
 $DateTimeProps.seedMonth                   = [int]([DateTime]$DateTimeProps.dateTimeSeed).Month
 $DateTimeProps.seedDayofMonth              = [int]([DateTime]$DateTimeProps.dateTimeSeed).Day
 $DateTimeProps.seedDayofYear               = ([DateTime]$DateTimeProps.dateTimeSeed).DayOfYear
 $DateTimeProps.seedYear                    = ([DateTime]$DateTimeProps.dateTimeSeed).Year
-
+"$($StopWatch.Elapsed.TotalMilliseconds  )  Elapsed millisec(s) > seed value(s)"
 foreach($i in (1..($Span.inBlocks))){
     if($i -eq 1)    {$Start = [datetime]$DateTimeProps.dateTimeSeed}
     if(!($i -eq 1)) {$Start = $End}
@@ -80,16 +85,8 @@ foreach($i in (1..($Span.inBlocks))){
     if($doyID -gt 9 -and $doyID -le 99) {$doyID = "0$($doyID)"}
     if($doyID -ge 100)                  {$doyID = "$($doyID)"}
 
-    # BlockID
-    if($i -le [int]('1'+'0')-1)                          {$blockID = "$('0'*8)$i"}
-    if($i -ge [int]('1'+'0'*1) -and $i -le [int]('9'*2)) {$blockID = "$('0'*7)$i"}
-    if($i -ge [int]('1'+'0'*2) -and $i -le [int]('9'*3)) {$blockID = "$('0'*6)$i"}
-    if($i -ge [int]('1'+'0'*3) -and $i -le [int]('9'*4)) {$blockID = "$('0'*5)$i"}
-    if($i -ge [int]('1'+'0'*4) -and $i -le [int]('9'*5)) {$blockID = "$('0'*4)$i"}
-    if($i -ge [int]('1'+'0'*5) -and $i -le [int]('9'*6)) {$blockID = "$('0'*3)$i"}
-    if($i -ge [int]('1'+'0'*6) -and $i -le [int]('9'*7)) {$blockID = "$('0'*2)$i"}
-    if($i -ge [int]('1'+'0'*7) -and $i -le [int]('9'*9)) {$blockID = "$('0'*1)$i"}
-    if($i -ge [int]('1'+'0'*8))                          {$blockID = $i}
+    #blockID
+    $blockID = $i
 
     # monthID
     $monthID = $DateTimeProps.seedMonth
@@ -101,7 +98,7 @@ foreach($i in (1..($Span.inBlocks))){
     if($domID -le [int](('1'+'0')- 1))  {$domID = "$('0'+$domID)"}
     if($domID -ge [int](('1'+'0')))     {$domID = $domID}
 
-    $dowConvertedIDArray = ($DateTimeProps.seedWeekDay.Props.Binary).Split('.')
+    $dowConvertedIDArray = ($DateTimeProps.seedWeekDay.Props.ASCII).Split('.')
     $dowID = $null
     $dowConvertedIDArray | ForEach-Object{
         $x = [int]$_
@@ -109,15 +106,15 @@ foreach($i in (1..($Span.inBlocks))){
         if($x -ge [int](('1'+'00')- 1))    {$x = "$($x)"}
         $dowID += $x
     }
-
-    $globalID = "$($SpanID)$($snID)$($yearID)$($monthID)$($woyID)$($doyID)$($domID)$($dayID)$($hrID)$($weekdayconverted)$($minID)$($blockID)"
-
-    $rootObject.block.ID+= @{
-       "$blockID" = @{
-           'parameters' = [ordered]@{
+   
+    $RawData = "$($blockID),$($SpanID),$($snID),$($yearID),$($monthID),$($woyID),$($doyID),$($domID),$($dayID),$($hrID),$($mnID),'$($Start.ToString("yyyy-MM-dd HH:mm:ss.00"))','$( $End.ToString("yyyy-MM-dd HH:mm:ss.00"))','$($($nameDayID))',$($dowID),'$($dayTypeID)'"
+    
+    $rootObject.blocks+= @{
+        "$blockID" = @{
+           'ObjectParams' = [ordered]@{
+                BlockID        = $($blockID)
                 SpanID         = $($SpanID)
                 SecondofMin    = $($snID)
-                GlobalID       = $($globalID)
                 YearID         = $($yearID)
                 MonthofYear    = $($monthID)
                 WeekofYear     = $($woyID)
@@ -131,17 +128,12 @@ foreach($i in (1..($Span.inBlocks))){
                 DayofWeekName  = $($nameDayID)
                 DayofWeekAscii = $($dowID)
                 WeekDayDesc    = $($dayTypeID)
-                BlockID        = $($blockID)
            }
+        SQLServerInsertParams = @($RawData)
        }
     }
-
-    $string = $null
-    foreach($key in $rootObject.block.id[$blockID].parameters.keys){
-        $string +="'$($x.$key)',"
-    }
-    $string = [string]($string.Substring(0,$string.Length-1))
-    $TSQLinsert -f $("$string")
-
 }
+"$($StopWatch.Elapsed.TotalMilliseconds  )  Elapsed millisec(s) > complete task(s)"
+$StopWatch.Stop()
 
+$rootObject.blocks.values.SQLServerInsertParams

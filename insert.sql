@@ -1,4 +1,4 @@
-USE [CWDB]
+USE [{0}]
 GO
 
 INSERT INTO [dbo].[TimeIndex]
