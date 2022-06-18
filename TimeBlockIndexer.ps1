@@ -135,5 +135,4 @@ foreach($i in (1..($Span.inBlocks))){
 }
 "$($StopWatch.Elapsed.TotalMilliseconds  )  Elapsed millisec(s) > complete task(s)"
 $StopWatch.Stop()
-
 $rootObject.blocks.values.SQLServerInsertParams

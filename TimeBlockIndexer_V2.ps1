@@ -27,7 +27,7 @@ function Get-UDFIndexedBlocks {
         $DateTimeProps.dateFormat                  = "yyyy-MM-dd 00:00:00.00"
         $DateTimeProps.dateTimeSeed                = ([DateTime]((Get-Date).AddDays($Span.offSet)).ToString($DateTimeProps.dateFormat )).ToString($DateTimeProps.dateFormat)
         $DateTimeProps.seedWeekDay.Props.shortName = ([DateTime]$DateTimeProps.dateTimeSeed).toString('ddd')
-        $DateTimeProps.seedWeekDay.Props.ASCII    = Create-AsciiIndex -string $DateTimeProps.seedWeekDay.Props.shortName
+        $DateTimeProps.seedWeekDay.Props.ASCII     = Create-AsciiIndex -string $DateTimeProps.seedWeekDay.Props.shortName
         $DateTimeProps.seedWeekofYear              = Get-UDFWeekofYear -date ([DateTime]$DateTimeProps.dateTimeSeed)
         $DateTimeProps.seedMonth                   = [int]([DateTime]$DateTimeProps.dateTimeSeed).Month
         $DateTimeProps.seedDayofMonth              = [int]([DateTime]$DateTimeProps.dateTimeSeed).Day

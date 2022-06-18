@@ -1,28 +1,26 @@
--- Create a new table called 'TableName' in schema 'SchemaName'
--- Drop the table if it already exists
-use CWDB
-IF OBJECT_ID('dbo.TimeIndex', 'U') IS NOT NULL
-DROP TABLE dbo.TimeIndex
-GO
--- Create the table in the specified schema
-CREATE TABLE dbo.TimeIndex
+IF NOT EXISTS (SELECT * FROM sys.tables t join sys.schemas s ON (t.schema_id = s.schema_id) WHERE s.name='dbo' and t.name='TimeIndex')
+CREATE TABLE "dbo"."TimeIndex"
 (
-    SpanID      INT NOT NULL,
-    SecondofMin INT NOT NULL,
-    GlobalID    BIGINT NOT NULL,
-    [YearID]    INT NOT NULL,
-    MonthofYear INT NOT NULL,
-    WeekofYear  INT NOT NULL,
-    DayofYear   INT NOT NULL,
-    DayofMonth  INT NOT NULL,
-    DayofWeek   INT NOT NULL,
-    HourofDay   INT NOT NULL,
-    MinuteofHr  INT NOT NULL,
-    StartofSpan datetime2 NOT NULL,
-    EndtofSpan datetime2 NOT NULL,
-    DayofWeekName datetime2 NOT NULL,
-    DayofWeekAscii BIGINT NOT NULL,
-    WeekDayDesc datetime2 NOT NULL,
-    BlockID varchar(9) NOT NULL
+ "GlobalID"       uniqueidentifier NOT NULL CONSTRAINT "DF_TimeIndex_GlobalID" DEFAULT newid() ,
+ "DailyRecID"     int IDENTITY (1, 1) NOT NULL ,
+ "BlockID"        int NOT NULL ,
+ "SpanID"         int NOT NULL ,
+ "SecondofMin"    int NOT NULL ,
+ "YearID"         int NOT NULL ,
+ "MonthofYear"    int NOT NULL ,
+ "WeekofYear"     int NOT NULL ,
+ "DayofYear"      int NOT NULL ,
+ "DayofMonth"     int NOT NULL ,
+ "DayofWeek"      int NOT NULL ,
+ "HourofDay"      int NOT NULL ,
+ "MinuteofHr"     int NOT NULL ,
+ "StartofSpan"    datetime2(2) NOT NULL ,
+ "EndofSpan"      datetime2(2) NOT NULL ,
+ "DayofWeekName"  char(3) NOT NULL ,
+ "DayofWeekAscii" bigint NOT NULL ,
+ "WeekDayDesc"    char(7) NOT NULL ,
+
+
+ CONSTRAINT "pk_GlobalD" PRIMARY KEY CLUSTERED ("GlobalID" ASC)
 );
 GO

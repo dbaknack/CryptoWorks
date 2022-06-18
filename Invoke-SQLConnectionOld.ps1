@@ -1,6 +1,21 @@
 # database Intraction
+$ConnectionParams   = @{
+    ProcessName     =   "CRPTWRKS_001"
+    InstanceName    =   "MST3K\DEVINSTANCE"
+    DatabaseName    =   "CWDB"
+    Authentication  = @{
+        Type = 'SQL'
+    }
+    Credentials = @{
+        username    = $cred.UserName
+        Password    = $cred.Password
+    }
+}
+
+$ConnectionParams.Credentials.Password
+<#
 $Instance               = @{}
-$Instance.Name          = "MST3K\DEVINSTANCE" #use Server\Instance for named SQL instances!
+$Instance.Name          = "MST3K\DEVINSTANCE"
 $Instance.Database      = "master"
 $Authentication         = @{}
 $Authentication.Type    = @{}
@@ -10,9 +25,20 @@ $Password               = "P@55word"
 $processName            = 'CWDB_User_SQLConnection'
 $TsqlCommand            = "select * from sys.databases"
 
+    get-verb
+#>
+
 function Invoke-UDFSQLCommand{
     [CmdletBinding()]
-    Param ($InstanceName,$SQLUser,$ProcessName,$Password,$DatabaseName,$authType,$TsqlCommand)
+    Param (
+        $InstanceName,
+        $SQLUser,
+        $ProcessName,
+        $Password,
+        $DatabaseName,
+        $authType,
+        $TsqlCommand
+    )
     Write-Verbose $authType 
     if($authType -match 'SQL'){
         $connectionString = "
