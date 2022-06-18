@@ -1,0 +1,1 @@
+"hello" | out-file -FilePath M:\LocalRepository\CryptoWorks\test.txt -Append
