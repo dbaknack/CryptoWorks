@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Log a message with the specified log level.
+    Log a message with the specified log level. testing...
 
 .DESCRIPTION
     If the specified log level is higher as the configured log level, the
