@@ -1,6 +1,7 @@
 <#
 .SYNOPSIS
-    Log a message with the specified log level.
+
+
 
 .DESCRIPTION
     If the specified log level is higher as the configured log level, the
