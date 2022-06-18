@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-
+Log a message with the specified log level.
 
 
 .DESCRIPTION
