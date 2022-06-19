@@ -1,107 +1,111 @@
-<#
-.SYNOPSIS
-Log a message with the specified log level.
+Function Write-Log {
+    [CmdletBinding()]
+       Param (
+           [Parameter(
+               Mandatory=$true,
+               ValueFromPipeline=$true,
+               Position=0)]
+           [ValidateNotNullorEmpty()]
+           [String]$Message,
+   
+         [Parameter(Position=1)]
+           [ValidateSet("Information","Warning","Error","Debug","Verbose")]
+           [String]$Level = 'Information',
+   
+           [String]$Path = [IO.Path]::GetTempPath(),
+           [String]$Server,
+           [String]$Database,
+           [String]$Table,
+   
+           [Switch]$NoHost,
+           [Switch]$SQL,
+           [Switch]$File,
+           [decimal]$ElapsedTime,
+           [string]$FunctionName,
+           [string]$FunctionStep,
+           [int]$StepID
+       )
+   
+       Process {
+           $DateFormat = "yyyy-MM-dd HH:mm:ss.00"
+   
+           If (-Not $NoHost) {
+             Switch ($Level) {
+               "information" {
+                 Write-Host ("[{0}] {1}" -F (Get-Date).toString($DateFormat), $Message)
+                 Break
+                 
+               }
+               "warning" {
+                 Write-Warning ("[{0}] {1}" -F (Get-Date).toString($DateFormat), $Message)
+                 Break
+               }
+               "error" {
+                 Write-Error ("[{0}] {1}" -F (Get-Date).toString($DateFormat), $Message)
+                 Break
+               }
+               "debug" {
+                 Write-Debug ("[{0}] {1}" -F (Get-Date).toString($DateFormat), $Message) -Debug:$true
+                 Break
+               }
+               "verbose" {
+                 Write-Verbose ("[{0}] {1}" -F (Get-Date).toString($DateFormat), $Message) -Verbose:$true
+                 Break
+               }
+             }
+           }
+   
+           If ($File) {
+             Add-Content -Path (Join-Path $Path 'log.txt') -Value ("[{0}] ({1}) {2}" -F (Get-Date).toString($DateFormat), $Level, $Message)
+  
+  }
+   
+           If ($SQL) {
+            $DateFormat = "%m/%d/%Y %H:%M:%S"
+             If (-Not $Server -Or -Not $Database -Or -Not $Table) {
+               Write-Error "Missing Parameters"
+               Return
+             }
+   
+             $connection                  = New-Object System.Data.SqlClient.SqlConnection
+             $connection.ConnectionString = "Data Source=$Server;Initial Catalog=$Database;Integrated Security=SSPI;"
+   
+             If (-Not ($connection.State -like "Open")) {
+               $connection.Open()
+             }
+   
+             $sqlCommand = New-Object System.Data.SqlClient.SqlCommand
+             $sqlCommand.Connection = $connection
+   
+             $sqlCommand.CommandText = "INSERT INTO [$Database].dbo.$table ( DateTime, ElapsedTime_Milliseconds, FunctionName , StepID ,FunctionStep , Level, Message ) VALUES ( @DateTime, @ElapsedTime , @FunctionName , @StepID , @FunctionStep , @Level, @Message )"
+   
+             $sqlCommand.Parameters.Add("@DateTime",        [System.Data.SqlDbType]::VarChar, 255) | Out-Null
+             $sqlCommand.Parameters.Add("@ElapsedTime",     [System.Data.SqlDbType]::Float) | Out-Null
+             $sqlCommand.Parameters.Add("@FunctionName",    [System.Data.SqlDbType]::VarChar, 255) | Out-Null
+             $sqlCommand.Parameters.Add("@StepID",          [System.Data.SqlDbType]::int) | Out-Null
+             $sqlCommand.Parameters.Add("@FunctionStep",    [System.Data.SqlDbType]::VarChar, 255) | Out-Null
+             $sqlCommand.Parameters.Add("@Level",           [System.Data.SqlDbType]::VarChar, 255) | Out-Null
+             $sqlCommand.Parameters.Add("@Message",         [System.Data.SqlDbType]::VarChar, 255) | Out-Null
+   
+             $sqlCommand.Parameters['@DateTime'].Value          = (Get-Date -UFormat $DateFormat)
+             $sqlCommand.Parameters['@ElapsedTime'].Value       = ($ElapsedTime | Out-String)
+             $sqlCommand.Parameters['@FunctionName'].Value      = ($FunctionName | Out-String)
+             $sqlCommand.Parameters['@StepID'].Value            = ($StepID | Out-String)
+             $sqlCommand.Parameters['@FunctionStep'].Value      = ($FunctionStep | Out-String)
+             $sqlCommand.Parameters['@Level'].Value             = $Level
+             $sqlCommand.Parameters['@Message'].Value           = ($message | Out-String)
+             
+   
+             Try {
+               $sqlCommand.ExecuteNonQuery() | Out-Null
+             } Catch {
+               Write-Error "Unable to Insert Log Record: $($_.Exception.Message)"
+             }
+   
+             If ($connection.State -like "Open") {
+               $connection.Close()
+             }
+           }
+       }
+   }
 
-
-.DESCRIPTION
-    If the specified log level is higher as the configured log level, the
-    message will be logged to the enabled destinations. These are the specified
-    log file, the PowerShell event log and the current PowerShell console.
-
-.PARAMETER Message
-    The message to log.
-
-.PARAMETER Level
-    The log level to use.
-
-.EXAMPLE
-    C:\> Write-WarningLog -Message 'My Warning Message' -Level Warning
-    Log the warning message.
-#>
-
-function Write-Log
-{
-    [CmdletBinding(DefaultParameterSetName='Default')]
-    param
-    (
-        [Parameter(Position=0,
-                   Mandatory=$true,
-                   ParameterSetName='Default')]
-        [String] $Message,
-
-        [Parameter(Position=1,
-                   Mandatory=$true,
-                   ParameterSetName='Default')]
-        [ValidateSet('Verbose', 'Information', 'Warning', 'Error')]
-        [String] $Level,
-
-        [Parameter(Position=1,
-                   Mandatory=$true,
-                   ParameterSetName='ErrorRecord')]
-        [System.Management.Automation.ErrorRecord] $ErrorRecord
-    )
-
-    $ScriptLogger = Get-ScriptLogger
-
-    # Check if the logging is setup and enabled
-    if (($ScriptLogger -ne $null) -and ($ScriptLogger.Enabled -eq $true))
-    {
-        $LevelMap = @{
-            'Verbose'     = 0
-            'Information' = 1
-            'Warning'     = 2
-            'Error'       = 3
-        }
-
-        # Check if the log level an error or an error record was submitted
-        if ($PSCmdlet.ParameterSetName -eq 'Default' -and $Level -eq 'Error')
-        {
-            $ErrorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord -ArgumentList $Message, 'Unknown', 'NotSpecified', $null
-        }
-        elseif ($PSCmdlet.ParameterSetName -eq 'ErrorRecord')
-        {
-            $Message = $ErrorRecord.ToString()
-            $Level   = 'Error'
-        }
-
-        # Check the logging level
-        if ($LevelMap[$Level] -ge $LevelMap[$ScriptLogger.Level])
-        {
-            if ($ScriptLogger.LogFile)
-            {
-                # Output to log file
-                $Line = $ScriptLogger.Format -f (Get-Date), $env:ComputerName, $Env:Username, $Level, $Message
-                $Line | Out-File -FilePath $ScriptLogger.Path -Append
-            }
-
-            if ($ScriptLogger.EventLog)
-            {
-                if ($Level -eq 'Verbose')
-                {
-                    $EntryType = 'Information'
-                }
-                else
-                {
-                    $EntryType = $Level
-                }
-
-                # Output to event log
-                Write-EventLog -LogName 'Windows PowerShell' -Source 'PowerShell' -EventId 0 -Category 0 -EntryType $EntryType -Message $Message
-            }
-
-            # Output to console
-            if ($ScriptLogger.ConsoleOutput)
-            {
-                switch ($Level)
-                {
-                    'Verbose'     { Write-Verbose -Message $Message }
-                    'Information' { try { Write-Information -MessageData $Message } catch { Write-Host $Message } }
-                    'Warning'     { Write-Warning -Message $Message }
-                    'Error'       { Write-Error -ErrorRecord $ErrorRecord }
-                }
-            }
-        }
-    }
-}
-
-Write-Log

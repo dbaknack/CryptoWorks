@@ -1,25 +1,29 @@
 function Get-UDFIndexBlocks{
     [CmdletBinding()]
     param (
-        
+        [switch]$StopWatchOn,
+        [switch]$LoggingOn,
+        [int]$RequestLimit
     )
-    
     begin {
-        $StopWatch = [System.Diagnostics.Stopwatch]::new()
-        $StopWatch.Start()
-        $Span             = @{}
-        $Span.offSet      = 0
-        $Span.day         = New-TimeSpan -Days 1
-        $Span.inBlocks    = $Span.day.TotalSeconds/15
-        $rootObject       = [ordered]@{}
-        $rootObject.blocks = New-Object System.Collections.Generic.List[pscustomobject]
+        # default params are controlled in the DefaultParams Function
+        # stop start if param given
+        $FunctionName = 'Get-UDFIndexBlocks' 
+        if($StopWatchOn){$StopWatch = [System.Diagnostics.Stopwatch]::new();   $StopWatch.Start()}
+        if($LoggingOn){
+            # when logging is on, there is a dependency on the logging function
+            #[datetime] | [timeElabsed] [name of Function] | [level]
 
-        #$rootObject.blocks.ID = [ordered]@{}
-        
+        }
+        $Span              = @{}
+        $Span.offSet       = 0
+        $Span.day          = New-TimeSpan -Days 1
+        $Span.inBlocks     = $Span.day.TotalSeconds/15
+        $rootObject        = [ordered]@{}
+        $rootObject.blocks = New-Object System.Collections.Generic.List[pscustomobject]
         $TimeSegment       = @{}
         $TimeSegment.Start = @{}
         $TimeSegment.End   = @{}
-        
         
         $DateTimeProps                             = @{}
         $DateTimeProps.seedWeekDay                 = @{}
@@ -33,14 +37,26 @@ function Get-UDFIndexBlocks{
         $DateTimeProps.seedDayofMonth              = [int]([DateTime]$DateTimeProps.dateTimeSeed).Day
         $DateTimeProps.seedDayofYear               = ([DateTime]$DateTimeProps.dateTimeSeed).DayOfYear
         $DateTimeProps.seedYear                    = ([DateTime]$DateTimeProps.dateTimeSeed).Year
-        "$($StopWatch.Elapsed.TotalMilliseconds  ) Elapsed millisec(s) > define begin section"       
+
+        # state
+        if($LoggingOn){
+            $logParams = @{
+              SQL           = $true
+              Message       = "Indexing date: {0}" -f $DateTimeProps.dateTimeSeed
+              ElapsedTime   = $StopWatch.Elapsed.TotalMilliseconds
+              FunctionName  = $FunctionName
+              StepID        = 1
+              FunctionStep  = 'Initializing varaiables'
+              Level         = 'Information'
+              Server        = "MST3K\DEVINSTANCE"
+              Database      = "CWDB"
+              Table         = "Logging"
+            }
+            Write-Log @logParams
+        }
     }
-    
     process {
-
         foreach($i in (1..($Span.inBlocks))){
-
-    
             if($i -eq 1)    {$Start = [datetime]$DateTimeProps.dateTimeSeed}
             if(!($i -eq 1)) {$Start = $End}
             $Span.block = New-TimeSpan -Seconds 15
@@ -116,11 +132,11 @@ function Get-UDFIndexBlocks{
                 $dowID += $x
             }
            
-            $RawData = "'5','$($segmentEnum)','$($SpanID)','$($snID)','$($yearID)','$($monthID)','$($woyID)','$($doyID)','$($domID)','$($dayID)','$($hrID)','$($mnID)','$($Start.ToString("yyyy-MM-dd HH:mm:ss.00"))','$( $End.ToString("yyyy-MM-dd HH:mm:ss.00"))','$($($nameDayID))','$($dowID)','$($dayTypeID)'"
+            $RawData = "'$($RequestLimit)','$($SegmentID)','$($SpanID)','$($snID)','$($yearID)','$($monthID)','$($woyID)','$($doyID)','$($domID)','$($dayID)','$($hrID)','$($mnID)','$($Start.ToString("yyyy-MM-dd HH:mm:ss.00"))','$( $End.ToString("yyyy-MM-dd HH:mm:ss.00"))','$($($nameDayID))','$($dowID)','$($dayTypeID)'"
             $rootObject.blocks+= @{
                 "$SegmentID" = @{
                    'ObjectParams' = [ordered]@{
-                        RequestCounter = 5
+                        RequestCounter = $($RequestLimit)
                         SegmentID      = $($SegmentID)
                         SpanID         = $($SpanID)
                         SecondofMin    = $($snID)
@@ -143,10 +159,25 @@ function Get-UDFIndexBlocks{
             }
         }
     }
-    
     end {
-        "$($StopWatch.Elapsed.TotalMilliseconds  ) Elapsed millisec(s) > complete" 
-        $StopWatch.stop()
-        $rootObject    
+        if($StopWatchOn){
+            if($LoggingOn){
+                $logParams = @{
+                  SQL           = $true
+                  Message       = "Parsing complete" -f $DateTimeProps.dateTimeSeed
+                  ElapsedTime   = $StopWatch.Elapsed.TotalMilliseconds
+                  FunctionName  = $FunctionName
+                  StepID        = 2
+                  FunctionStep  = 'Parsing'
+                  Level         = 'Information'
+                  Server        = "MST3K\DEVINSTANCE"
+                  Database      = "CWDB"
+                  Table         = "Logging"
+                }
+                Write-Log @logParams
+            }
+            $StopWatch.stop()
+        }
+        $rootObject | out-null
     }
 }
