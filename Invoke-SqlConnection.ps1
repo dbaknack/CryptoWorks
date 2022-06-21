@@ -17,43 +17,30 @@ function Invoke-SqlConnection {
 
         [Parameter(Mandatory)]
         [securestring]$Password,
-
-        [string]$TSQLCommand)
+        [object]$sqlCommandObject)
     begin{
         $ErrorActionPreference = 'Stop'
-        $connectionString = "
+        $connectionString   = "
             Data Source         =   $($InstanceName);
             Database            =   $($DatabaseName);
             Application Name    =   $($ProcessName);
             Integrated Security =   $($IntegratedSecurity);
-            User ID             =   $($userName);
+            User ID             =   $($username);
             Password            =   $($Password)"
-    }
-    process{
-        if($processName -eq 'CRPTWRKS_001'){
-            try {
-                $sqlConnection = New-Object System.Data.SqlClient.SqlConnection $connectionString
-                $sqlConnection.Open()
-                
-                ## This will run if the Open() method does not throw an exception
-                $connectionStatus = $true
-            } catch {
-                $connectionStatus =  $false
-            } finally {
-                ## Close the connection when we're done
-                $sqlConnection.Close()
-            }
+        
+        $sqlConnection  = New-Object System.Data.SqlClient.SqlConnection $connectionString
+        if(-Not $($sqlConnection.State -like "Open")){
+            $sqlConnection.Open()
         }
     }
+    process{
+        $sqlCommandObject.Connection = $sqlConnection
+        try{$sqlCommandObject.ExecuteNonQuery()   | Out-Null}
+        catch{Write-Error "Unable to Insert Log Record: $($_.Exception.Message)"}
+    }
     end{
-        if($processName -eq 'CRPTWRKS_002'){
-                $sqlConnection  = New-Object System.Data.SqlClient.SqlConnection $connectionString
-                $sqlCmd         = New-Object System.Data.SqlClient.SqlCommand
-                $sqlConnection.Open()
-                $SqlCmd.CommandText = $TSQLCommand
-                $SqlCmd.Connection = $sqlConnection
-                $sqlCmd.ExecuteNonQuery()  | out-null
-                $sqlConnection.Close() | out-null
+        if($sqlConnection.State -like "Open"){
+            $sqlConnection.Close()
         }
     }
 }

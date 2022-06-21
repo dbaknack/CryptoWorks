@@ -1,0 +1,2 @@
+
+Get-UDFIndexBlocks -StopWatchOn -LoggingOn
