@@ -1,20 +1,20 @@
+
 function Get-UDFIndexBlocks{
     [CmdletBinding()]
     param (
         [switch]$StopWatchOn,
-        [switch]$LoggingOn,
-        [int]$RequestLimit
+        [int]$RequestLimit = 5
     )
     begin {
+######testing the above. things need to be wrapped up in a module in order for SQL Agent to kick the function off on its own.
+
+
         # default params are controlled in the DefaultParams Function
         # stop start if param given
+        $DateTimeInitiated = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss.fff")
         $FunctionName = 'Get-UDFIndexBlocks' 
         if($StopWatchOn){$StopWatch = [System.Diagnostics.Stopwatch]::new();   $StopWatch.Start()}
-        if($LoggingOn){
-            # when logging is on, there is a dependency on the logging function
-            #[datetime] | [timeElabsed] [name of Function] | [level]
 
-        }
         $Span              = @{}
         $Span.offSet       = 0
         $Span.day          = New-TimeSpan -Days 1
@@ -41,18 +41,19 @@ function Get-UDFIndexBlocks{
         # state
         if($LoggingOn){
             $logParams = @{
-              SQL           = $true
-              Message       = "Indexing date: {0}" -f $DateTimeProps.dateTimeSeed
-              ElapsedTime   = $StopWatch.Elapsed.TotalMilliseconds
-              FunctionName  = $FunctionName
-              StepID        = 1
-              FunctionStep  = 'Initializing varaiables'
-              Level         = 'Information'
-              Server        = "MST3K\DEVINSTANCE"
-              Database      = "CWDB"
-              Table         = "Logging"
+              SQL                       = $true
+              Message                   = "Indexing date: {0}" -f $DateTimeProps.dateTimeSeed
+              DateTimeInitiated         = $DateTimeInitiated
+              ElapsedTime_Milliseconds  = $StopWatch.Elapsed.TotalMilliseconds
+              FunctionName              = $FunctionName
+              StepID                    = 1
+              FunctionStep              = 'Initializing varaiables'
+              Level                     = 'Information'
+              Server                    = "MST3K\DEVINSTANCE"
+              Database                  = "CWDB"
+              Table                   = "Logging"
             }
-            Write-Log @logParams
+          Write-Log @logParams
         }
     }
     process {
@@ -163,16 +164,17 @@ function Get-UDFIndexBlocks{
         if($StopWatchOn){
             if($LoggingOn){
                 $logParams = @{
-                  SQL           = $true
-                  Message       = "Parsing complete" -f $DateTimeProps.dateTimeSeed
-                  ElapsedTime   = $StopWatch.Elapsed.TotalMilliseconds
-                  FunctionName  = $FunctionName
-                  StepID        = 2
-                  FunctionStep  = 'Parsing'
-                  Level         = 'Information'
-                  Server        = "MST3K\DEVINSTANCE"
-                  Database      = "CWDB"
-                  Table         = "Logging"
+                  SQL                       = $true
+                  Message                   = "Parsing complete" -f $DateTimeProps.dateTimeSeed
+                  DateTimeInitiated         = $DateTimeInitiated
+                  ElapsedTime_Milliseconds  = $StopWatch.Elapsed.TotalMilliseconds
+                  FunctionName              = $FunctionName
+                  StepID                    = 2
+                  FunctionStep              = 'Parsing'
+                  Level                     = 'Information'
+                  Server                    = "MST3K\DEVINSTANCE"
+                  Database                  = "CWDB"
+                  Table                     = "Logging"
                 }
                 Write-Log @logParams
             }

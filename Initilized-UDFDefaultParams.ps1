@@ -1,18 +1,16 @@
-
-
-Get-UDFIndexBlocks -StopWatchOn
-
-$PSDefaultParameterValues = @{
-    'Get-UDFIndexBlocks:StopWatchOn'      = $true
-}
 $PSDefaultParameterValues.clear()
 
 
 $PSDefaultParameterValues = @{
-    'Write-Log:SQL'      = $true
-    'Write-Log:Server'   = 'SQLServer'
-    'Write-Log:Database' = 'Logging'
-    'Write-Log:Table'      = 'Logs'
+    'Invoke-SqlConnection:InstanceName' = "MST3K\DEVINSTANCE"
+    'Invoke-SqlConnection:DatabaseName' = 'CWDB'
+    'Invoke-SqlConnection:Table'        = 'LogLookUp'
+}
+
+$PSDefaultParameterValues = @{
+    'Invoke-SqlConnection:InstanceName' = "MST3K\DEVINSTANCE"
+    'Invoke-SqlConnection:DatabaseName' = 'CWDB'
+    'Invoke-SqlConnection:Table'        = 'LogLookUp'
 }
 
 ## Logging

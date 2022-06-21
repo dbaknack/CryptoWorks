@@ -58,16 +58,14 @@ Function Write-Log {
    
            If ($File) {
              Add-Content -Path (Join-Path $Path 'log.txt') -Value ("[{0}] ({1}) {2}" -F (Get-Date).toString($DateFormat), $Level, $Message)
-  
   }
    
-           If ($SQL) {
+            If($SQL){
             $DateFormat = "yyyy-MM-dd HH:mm:ss.ff"
-            #$DateTimeInitiated = [datetime]::parseexact($DateTimeInitiated, 'yyyy-MM-dd HH:mm:ss.ff', $null).ToString('yyyy-MM-dd HH:mm:ss.ff')
-             If (-Not $Server -Or -Not $Database -Or -Not $Table) {
-               Write-Error "Missing Parameters"
-               Return
-             }
+            If(-Not $Server -Or -Not $Database -Or -Not $Table){
+                Write-Error "Missing Parameters"
+                Return
+            }
               # define the connection string first
              $connection                  = New-Object System.Data.SqlClient.SqlConnection
              $connection.ConnectionString = "Data Source=$Server;Initial Catalog=$Database;Integrated Security=SSPI;"
