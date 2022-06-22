@@ -4,7 +4,7 @@ function New-UDFSQLLogIndex{
         [string]$DatabaseName       = "CWDB",
         [string]$processName        = $MyInvocation.MyCommand.name,
         [string]$ExecutingUser      = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name,
-        [string]$IntegratedSecurity = $true,
+        [string]$IntegratedSecurity,
         [switch]$refDateTime
     )
     begin{ 

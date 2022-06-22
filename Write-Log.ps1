@@ -19,6 +19,7 @@ Function Write-Log{
    
            [Switch]$NoHost,
            [Switch]$SQL,
+           [switch]$IntegratedSecurity,
            [Switch]$File,
            [decimal]$ElapsedTime_Milliseconds,
            [string]$FunctionName,
@@ -71,7 +72,7 @@ Function Write-Log{
              }
               # define the connection string first
              $connection                  = New-Object System.Data.SqlClient.SqlConnection
-             $connection.ConnectionString = "Data Source=$Server;Initial Catalog=$Database;Integrated Security=SSPI;"
+             $connection.ConnectionString = "Data Source=$Server;Initial Catalog=$Database;Integrated Security=$($IntegratedSecurity);"
    
              If (-Not ($connection.State -like "Open")) {
                $connection.Open()

@@ -1,3 +1,5 @@
+
+$PSDefaultParameterValues.Clear()
 Function Write-Log{
     [CmdletBinding()]
        Param (
@@ -16,7 +18,7 @@ Function Write-Log{
            [String]$Server,
            [String]$Database,
            [String]$Table,
-   
+        [switch]$IntegratedSecurity,
            [Switch]$NoHost,
            [Switch]$SQL,
            [Switch]$File,
@@ -127,7 +129,7 @@ function New-UDFSQLLogIndex{
         [string]$InstanceName       = "MST3K\DEVINSTANCE",
         [string]$DatabaseName       = "CWDB",
         [string]$processName        = $MyInvocation.MyCommand.name,
-        [string]$ExecutingUser      = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name,
+        [string]$ExecutingUser      = $env:USERNAME,
         [string]$IntegratedSecurity = $true,
         [switch]$refDateTime
     )
@@ -186,11 +188,14 @@ function Invoke-UDFSqlConnection {
        # [Parameter(Mandatory)]
         [string]$userName,
 
-       [Parameter(Mandatory)]
+       #[Parameter(Mandatory)]
         [securestring]$Password,
         [object]$sqlCommandObject)
     begin{
-        $FunctionName = $MyInvocation.mycommand.name
+        if($IntegratedSecurity -eq $false){
+            $userName = 'sa'
+            $Password = 'P@55word'
+        }
         $ErrorActionPreference = 'Stop'
         $connectionString   = "
             Data Source         =   $($InstanceName);
@@ -208,7 +213,7 @@ function Invoke-UDFSqlConnection {
     process{
         $sqlCommandObject.Connection = $sqlConnection
         try{$sqlCommandObject.ExecuteNonQuery()   | Out-Null}
-        catch{Write-Error "Unable to Insert Log Record: $($_.Exception.Message)"}
+        catch{Write-Error "Unable to Insert Log Record $($sqlCommandObject.commandText): $($_.Exception.Message)"}
     }
     end{
         if($sqlConnection.State -like "Open"){
@@ -476,6 +481,7 @@ function Get-UDFIndexBlocks{
             $subStringDate = ($DateTimeProps.dateTimeSeed).substring(0,10)
             $logParams = @{
               SQL                       = $true
+              IntegratedSecurity        = $false
               Message                   = "Indexing date: {0}" -f $subStringDate
               refDate                   = $refDate
               DateTimeEvent             = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss.fff")
@@ -601,6 +607,7 @@ function Get-UDFIndexBlocks{
                 $logParams = @{
                   SQL                       = $true
                   Message                   = "Parsing complete" -f $DateTimeProps.dateTimeSeed
+                  IntegratedSecurity        = $false
                   refDate                   = $refDate
                   DateTimeEvent             = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss.fff")
                   ElapsedTime_Milliseconds  = $StopWatch.Elapsed.TotalMilliseconds
@@ -621,11 +628,5 @@ function Get-UDFIndexBlocks{
 }
 
 
-$credentials = Get-UDFStoredCredential -Name "SQLSERVER_SA"
-
-$PSDefaultParameterValues = @{
-    'Invoke-UDFSqlConnection:UserName' = $credentials.UserName
-    'Invoke-UDFSqlConnection:PassWord' = $credentials.PassWord
-}
 
 Get-UDFIndexBlocks -StopWatchOn -LoggingOn
