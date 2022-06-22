@@ -1,5 +1,5 @@
 $config = Get-Content -path E:\Credentials\EmailParams\Outbound.Emails.Config.json | convertfrom-json
-$Creds  = Get-StoredCredential -Name EmailService
+$Creds  = Get-UDFStoredCredential -Name EmailService
 
 $EmailSplat = @{
     from = $config.from

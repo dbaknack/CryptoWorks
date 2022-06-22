@@ -35,21 +35,21 @@
 .PARAMETER Delete
     Delete credential and do not prompt for a new one.
 .EXAMPLE
-    $cred = Get-StoredCredential -Name vCenter
+    $cred = Get-UDFStoredCredential -Name vCenter
 
     Read credential for vCenter and return as PSCredential object. The cmdlet will prompt for username and
     password if the credential cannot be read.
 .EXAMPLE
-    $cred = Get-StoredCredential -Name JustAName -UserName "Administrator"
+    $cred = Get-UDFStoredCredential -Name JustAName -UserName "Administrator"
 
     If it must ask for a new credential, the user name field will be filled in as a suggestion.
 .EXAMPLE
-    $cred = Get-StoredCredential -Name JustAName -StorePath "E:\Credentials\myname"
+    $cred = Get-UDFStoredCredential -Name JustAName -StorePath "E:\Credentials\myname"
 
     Uses the file 'E:\Credentials\myname\JustAName.username' to store the user name and the file
     'E:\Credentials\myname\JustAName.password' to store the password.
 .EXAMPLE
-    Get-StoredCredential -Name JustAName -Credential $cred
+    Get-UDFStoredCredential -Name JustAName -Credential $cred
 
     Store the credential $cred in the credential store. Use this method for storing a credential if it is used
     in a script running under a service account and you cannot log in under that account. To make this work, create
@@ -58,15 +58,15 @@
 
     $securePassword = ConvertTo-SecureString -String "ThePassword" -AsPlainText -Force
     $cred = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "TheUserName", $securePassword
-    Get-StoredCredential -Name JustAName -StorePath "E:\Credentials\ServiceAccount" -Credential $cred
+    Get-UDFStoredCredential -Name JustAName -StorePath "E:\Credentials\ServiceAccount" -Credential $cred
 
     Do not forget to overwrite or delete this script afterward, or your password is still exposed.
 .EXAMPLE
-    Get-StoredCredential -Name JustAName -Delete
+    Get-UDFStoredCredential -Name JustAName -Delete
 
     Delete the credential JustAName. If the -Delete parameter is used then no PSCredential object will be returned.
 #>
-function Get-StoredCredential
+function Get-UDFStoredCredential
 {
     [CmdletBinding()]
     Param
@@ -183,7 +183,7 @@ function Get-StoredCredential
         }
         catch
         {
-            Write-Host -BackgroundColor Black -ForegroundColor Red "Get-StoredCredential: $($_.Exception.Message)"
+            Write-Host -BackgroundColor Black -ForegroundColor Red "Get-UDFStoredCredential: $($_.Exception.Message)"
         }
     }
 }

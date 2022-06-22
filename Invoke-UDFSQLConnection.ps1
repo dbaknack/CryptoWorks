@@ -1,4 +1,4 @@
-function Invoke-SqlConnection {
+function Invoke-UDFSqlConnection {
     param(
         [Parameter(Mandatory)]
         [string]$InstanceName,
@@ -12,13 +12,14 @@ function Invoke-SqlConnection {
         [Parameter(Mandatory)]
         [string]$IntegratedSecurity,
 
-        [Parameter(Mandatory)]
+       # [Parameter(Mandatory)]
         [string]$userName,
 
-        [Parameter(Mandatory)]
+       [Parameter(Mandatory)]
         [securestring]$Password,
         [object]$sqlCommandObject)
     begin{
+        $FunctionName = $MyInvocation.mycommand.name
         $ErrorActionPreference = 'Stop'
         $connectionString   = "
             Data Source         =   $($InstanceName);

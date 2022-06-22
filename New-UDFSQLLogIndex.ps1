@@ -2,32 +2,29 @@ function New-UDFSQLLogIndex{
     param(
         [string]$InstanceName       = "MST3K\DEVINSTANCE",
         [string]$DatabaseName       = "CWDB",
-        [string]$processName        = "Request-UDFLogID",
-        [string]$IntegratedSecurity = $true
+        [string]$processName        = $MyInvocation.MyCommand.name,
+        [string]$ExecutingUser      = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name,
+        [string]$IntegratedSecurity = $true,
+        [switch]$refDateTime
     )
-    begin{
-        $credentials            = Get-StoredCredential -Name sqlserver
-        $sqlConnectionParams    = @{
-            InstanceName        = $InstanceName
-            DatabaseName        = $DatabaseName
-            ProcessName         = $ProcessName
-            IntegratedSecurity  = $true
-            UserName            = $credentials.username
-            PassWord            = $credentials.password
-            sqlCommandObject    =  $sqlCommand
-        }
+    begin{ 
         $TableName              = "LogLookUp"
         $DateFormat             = "yyyy-MM-dd HH:mm:ss.ff"
+        $DateTimeCollected      = Get-Date
         $sqlCommand             = New-Object System.Data.SqlClient.SqlCommand
         $sqlCommand.commandText = "
             SET NOCOUNT ON
             INSERT INTO [$($InstanceName)].[$($DatabaseName)].[dbo].[$($TableName)]
-                (DateTimeLogged)
+                (DateTimeLogged,ProcessName,ExecutingUser)
             VALUES
-            (@DateTimeLogged)"
+            (@DateTimeLogged,@ProcessName,@ExecutingUser)"
 
-        $sqlCommand.Parameters.Add("@DateTimeLogged",[System.Data.SqlDbType]::DateTime) | Out-Null
-        $sqlCommand.Parameters['@DateTimeLogged'].Value = ((Get-Date).ToString($DateFormat))
+        $sqlCommand.Parameters.Add("@DateTimeLogged", [System.Data.SqlDbType]::DateTime) | Out-Null
+        $sqlCommand.Parameters.Add("@ProcessName",    [System.Data.SqlDbType]::VarChar, 255) | Out-Null
+        $sqlCommand.Parameters.Add("@ExecutingUser",  [System.Data.SqlDbType]::VarChar, 255) | Out-Null
+        $sqlCommand.Parameters['@DateTimeLogged'].Value = (($DateTimeCollected ).ToString($DateFormat))
+        $sqlCommand.Parameters['@ProcessName'].Value    = ($processName | Out-String)
+        $sqlCommand.Parameters['@ExecutingUser'].Value    = ($ExecutingUser | Out-String)
     }
     process{
         $sqlConnectionParams    = @{
@@ -35,11 +32,15 @@ function New-UDFSQLLogIndex{
             DatabaseName        = $DatabaseName
             ProcessName         = $ProcessName
             IntegratedSecurity  = $true
-            UserName            = $credentials.username
-            PassWord            = $credentials.password
             sqlCommandObject    =  $sqlCommand
         }
-        Invoke-SqlConnection @sqlConnectionParams
+        Invoke-UDFSqlConnection @sqlConnectionParams
     }
-    end{}
-} 
+    end{
+        if($refDateTime){
+            $DateTimeCollected.ToString($DateFormat)
+            return
+        }
+        return
+    }
+}
