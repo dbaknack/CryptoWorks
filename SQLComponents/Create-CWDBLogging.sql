@@ -12,7 +12,6 @@ IF NOT EXISTS (SELECT * FROM sys.tables t join sys.schemas s ON (t.schema_id = s
 CREATE TABLE "dbo"."Logging"
 (
  "LID"                      int NOT NULL ,
- "DateTimeLogged"           datetime2(2) NOT NULL ,
  "DateTimeEvent"            datetime2(2) NOT NULL ,
  "ElapsedTime_Milliseconds" decimal(10,2) NOT NULL ,
  "FunctionName"             varchar(255) NOT NULL ,

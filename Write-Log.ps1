@@ -1,4 +1,4 @@
-Function Write-Log {
+Function Write-Log{
     [CmdletBinding()]
        Param (
            [Parameter(
@@ -24,12 +24,13 @@ Function Write-Log {
            [string]$FunctionName,
            [string]$FunctionStep,
            [int]$StepID,
-           [string]$DateTimeInitiated
+           [string]$DateTimeEvent,
+           [string]$refDate
+
        )
-   
        Process {
            $DateFormat = "yyyy-MM-dd HH:mm:ss.ff"
-           $DateTimeInitiated
+           #$DateTimeInitiated
            If (-Not $NoHost) {
              Switch ($Level) {
                "information" {
@@ -80,19 +81,20 @@ Function Write-Log {
              $sqlCommand.Connection = $connection
    
              $sqlCommand.CommandText = "
+             DECLARE @LID INT =  (SELECT LID FROM [CWDB].dbo.LogLookUp WHERE DateTimeLogged = @refDate)
+             
             INSERT INTO [$Database].dbo.$table (
-            DateTimeInitiated, 
-            DateTimeLogged, 
+            LID,
+            DateTimeEvent,
             ElapsedTime_Milliseconds, 
             FunctionName, 
             StepID,
             FunctionStep, 
             Level, 
             Message
-              ) VALUES ( @DateTimeInitiated, @DateTimeLogged , @ElapsedTime_Milliseconds , @FunctionName , @StepID , @FunctionStep , @Level, @Message )"
-   
-             $sqlCommand.Parameters.Add("@DateTimeInitiated",         [System.Data.SqlDbType]::VarChar, 255) | Out-Null
-             $sqlCommand.Parameters.Add("@DateTimeLogged",            [System.Data.SqlDbType]::VarChar, 255) | Out-Null
+              ) VALUES (@LID, @DateTimeEvent , @ElapsedTime_Milliseconds , @FunctionName , @StepID , @FunctionStep , @Level, @Message )"
+             $sqlCommand.Parameters.Add("@DateTimeEvent",             [System.Data.SqlDbType]::VarChar, 255) | Out-Null
+             $sqlCommand.Parameters.Add("@refDate",                   [System.Data.SqlDbType]::VarChar, 255) | Out-Null
              $sqlCommand.Parameters.Add("@ElapsedTime_Milliseconds",  [System.Data.SqlDbType]::Float) | Out-Null
              $sqlCommand.Parameters.Add("@FunctionName",              [System.Data.SqlDbType]::VarChar, 255) | Out-Null
              $sqlCommand.Parameters.Add("@StepID",                    [System.Data.SqlDbType]::int) | Out-Null
@@ -100,16 +102,14 @@ Function Write-Log {
              $sqlCommand.Parameters.Add("@Level",                   [System.Data.SqlDbType]::VarChar, 255) | Out-Null
              $sqlCommand.Parameters.Add("@Message",                 [System.Data.SqlDbType]::VarChar, 255) | Out-Null
    
-             $sqlCommand.Parameters['@DateTimeInitiated'].Value         = (([datetime]$DateTimeInitiated).ToString($DateFormat))
-             $sqlCommand.Parameters['@DateTimeLogged'].Value            = ((Get-Date).ToString($DateFormat))
+             $sqlCommand.Parameters['@DateTimeEvent'].Value             = (([datetime]$DateTimeEvent).ToString($DateFormat))
+             $sqlCommand.Parameters['@refDate'].Value                   = (([string]$refDate))
              $sqlCommand.Parameters['@ElapsedTime_Milliseconds'].Value  = ($ElapsedTime_Milliseconds | Out-String)
              $sqlCommand.Parameters['@FunctionName'].Value              = ($FunctionName | Out-String)
              $sqlCommand.Parameters['@StepID'].Value                    = ($StepID | Out-String)
              $sqlCommand.Parameters['@FunctionStep'].Value              = ($FunctionStep | Out-String)
              $sqlCommand.Parameters['@Level'].Value                     = $Level
              $sqlCommand.Parameters['@Message'].Value                   = ($message | Out-String)
-             
-   
              Try {
                $sqlCommand.ExecuteNonQuery() | Out-Null
              } Catch {

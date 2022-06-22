@@ -10,9 +10,11 @@ GO
 IF NOT EXISTS (SELECT * FROM sys.tables t join sys.schemas s ON (t.schema_id = s.schema_id) WHERE s.name='dbo' and t.name='LogLookUp')
 CREATE TABLE "dbo"."LogLookUp"
 (
- "LID"            int IDENTITY (1, 1) NOT NULL ,
- "DateTimeLogged" datetime2(2) NOT NULL ,
-
+ "LID"              int IDENTITY (1, 1) NOT NULL ,
+ "DateTimeLogged"   datetime2(2)        NOT NULL ,
+ "ProcessName"      varchar(255)        NOT NULL,
+ "ExecutingUser"    varchar(25)         NOT NULL
+ 
 
  CONSTRAINT "pk_loglookup" PRIMARY KEY CLUSTERED ("LID" ASC)
 );
