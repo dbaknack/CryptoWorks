@@ -16,19 +16,14 @@ function Invoke-UDFSqlConnection {
             Password            =   $($Password)"
         
         $sqlConnection  = New-Object System.Data.SqlClient.SqlConnection $connectionString
-        if(-Not $($sqlConnection.State -like "Open")){
-            $sqlConnection.Open()
-            Write-Verbose -message "SQL connection open" -Verbose
-        }
+        if(-Not $($sqlConnection.State -like "Open")){ $sqlConnection.Open();   Write-Verbose -message "SQL connection open" -Verbose }
     }
     process{
         $sqlCommandObject.Connection = $sqlConnection
-        try{$sqlCommandObject.ExecuteNonQuery()}
-        catch{Write-Error "Unable to Insert Log Record: $($_.Exception.Message)"}
+        try{ $sqlCommandObject.ExecuteNonQuery() }
+        catch{ Write-Error "Unable to Insert Log Record: $($_.Exception.Message)" ./Get-UDFIndexBlocks.ps1}
     }
     end{
-        if($sqlConnection.State -like "Open"){
-            $sqlConnection.Close()
-        }
+        if($sqlConnection.State -like "Open"){ $sqlConnection.Close() }
     }
 }
