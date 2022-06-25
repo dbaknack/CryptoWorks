@@ -1,0 +1,31 @@
+$modules = ((Get-Module) | Select-Object name)
+
+foreach($module in $modules){
+    if($module -match 'CryptoWorks'){
+        $isInstalled = $true
+    }
+}
+if($isInstalled){
+    Write-Verbose "Module imported, removing..." -Verbose
+    Remove-Module -name 'CryptoWorks'
+    $isInstalled = $false
+}
+if(!($isInstalled)){
+    Write-Verbose "Importing Module..." -Verbose
+    Import-Module -name 'CryptoWorks'
+}
+
+Get-Command -Module CryptoWorks
+$SQLStatement =         "
+            SET NOCOUNT ON
+            INSERT INTO [{0}].[{1}].[dbo].[{2}]
+                (DateTimeLogged,ProcessName,ExecutingUser)
+            VALUES
+                (@DateTimeLogged,@ProcessName,@ExecutingUser)"
+New-UDFSQLCommand -DML 'SELECT' -TableName 'LogLookUp' -SQLStatement $SQLStatement -Verbose
+
+$PSDefaultParameterValues
+
+
+
+

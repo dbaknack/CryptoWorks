@@ -1,0 +1,21 @@
+$configuration = Import-PowerShellDataFile .\Configuration.psd1
+$credentials   = Get-UDFStoredCredential -name 'SQLServer_sa'
+$PSDefaultParameterValues = [ordered]@{
+    "Get-UDFIndexBlocks:FunctionName"               =   "Get-UDFIndexBlocks"
+    "Get-UDFIndexBlocks:RequestLimit"               =   $configuration.'Get-UDFIndexBlocks'.RequestLimit
+    "Get-UDFIndexBlocks:StopWatchOn"                =   $configuration.'Get-UDFIndexBlocks'.StopWatchOn
+    "New-UDFSQLCommand:FunctionName"                =   "New-UDFSQLCommand"
+    "New-UDFSQLCommand:InstanceName"                =   $configuration.'New-UDFSQLCommand'.InstanceName
+    "New-UDFSQLCommand:Databasename"                =   $configuration.'New-UDFSQLCommand'.Databasename
+    "New-UDFSQLCommand:IntegratedSecurity"          =   $configuration.'New-UDFSQLCommand'.IntegratedSecurity
+    "New-UDFSQLCommand:UserName"                    =   $configuration.'New-UDFSQLCommand'.UserName
+    "New-UDFSQLCommand:Password"                    =   $configuration.'New-UDFSQLCommand'.Password
+    "Invoke-UDFSQLConnection:FunctionName"          =   "Invoke-UDFSQLConnection"
+    "Invoke-UDFSQLConnection:InstanceName"          =   $configuration.'Invoke-UDFSQLConnection'.InstanceName
+    "Invoke-UDFSQLConnection:Databasename"          =   $configuration.'Invoke-UDFSQLConnection'.Databasename
+    "Invoke-UDFSQLConnection:IntegratedSecurity"    =   $configuration.'Invoke-UDFSQLConnection'.IntegratedSecurity
+    "Invoke-UDFSQLConnection:UserName"              =   $configuration.'Invoke-UDFSQLConnection'.UserName
+    "Invoke-UDFSQLConnection:Password"              =   $credentials.password
+    "Get-ModuleVariables:FunctionName"              =   "Get-ModuleVariables"
+    "Get-ModuleVariables:DateFormat"                =   $configuration.'Get-ModuleVariables'.DateFormat
+}

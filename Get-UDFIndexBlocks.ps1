@@ -4,15 +4,12 @@ function Get-UDFIndexBlocks{
     param (
         [switch]$StopWatchOn,
         [switch]$LoggingOn,
-        [int]$RequestLimit = 5
+        [int]$RequestLimit,
+        [string]$FunctionName
     )
     begin {
-        # default params are controlled in the DefaultParams Function
-        # stop start if param given
-        $FunctionName       = $MyInvocation.MyCommand.name
-
-        
-        $refDate = New-UDFSQLLogIndex -processName $FunctionName -refDateTime
+$env:psd
+        $refDate    = New-UDFSQLLogIndex -processName $FunctionName -refDateTime
 
         if($StopWatchOn){$StopWatch = [System.Diagnostics.Stopwatch]::new();   $StopWatch.Start()}
 
@@ -32,7 +29,7 @@ function Get-UDFIndexBlocks{
         $DateTimeProps.dateFormat                  = "yyyy-MM-dd 00:00:00.00"
         $DateTimeProps.dateTimeSeed                = ([DateTime]((Get-Date).AddDays($Span.offSet)).ToString($DateTimeProps.dateFormat )).ToString($DateTimeProps.dateFormat)
         $DateTimeProps.seedWeekDay.Props.shortName = ([DateTime]$DateTimeProps.dateTimeSeed).toString('ddd')
-        $DateTimeProps.seedWeekDay.Props.ASCII    = Convertto-UDFASCII -string $DateTimeProps.seedWeekDay.Props.shortName
+        $DateTimeProps.seedWeekDay.Props.ASCII     = Convertto-UDFASCII -string $DateTimeProps.seedWeekDay.Props.shortName
         $DateTimeProps.seedWeekofYear              = Get-UDFWeekofYear -date ([DateTime]$DateTimeProps.dateTimeSeed)
         $DateTimeProps.seedMonth                   = [int]([DateTime]$DateTimeProps.dateTimeSeed).Month
         $DateTimeProps.seedDayofMonth              = [int]([DateTime]$DateTimeProps.dateTimeSeed).Day

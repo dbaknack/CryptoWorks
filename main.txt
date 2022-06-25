@@ -1,4 +1,5 @@
-
+$config = Import-PowerShellDataFile .\Configuration.psd1
+$config.AllNodes
 $PSDefaultParameterValues.Clear()
 Function Write-Log{
     [CmdletBinding()]

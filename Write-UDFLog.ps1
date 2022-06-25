@@ -1,4 +1,4 @@
-Function Write-Log{
+Function Write-UDFLog{
     [CmdletBinding()]
        Param (
            [Parameter(
