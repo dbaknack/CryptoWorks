@@ -23,9 +23,5 @@ $SQLStatement =         "
             VALUES
                 (@DateTimeLogged,@ProcessName,@ExecutingUser)"
 New-UDFSQLCommand -DML 'SELECT' -TableName 'LogLookUp' -SQLStatement $SQLStatement -Verbose
-
-$PSDefaultParameterValues
-
-
-
-
+$Env:PSModulePath +=(':/users/alexhernandez/localrepo/cryptoworks/')
+$Env:PSModulePath.Split(":")

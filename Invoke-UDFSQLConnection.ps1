@@ -1,17 +1,12 @@
 function Invoke-UDFSqlConnection {
+    [CmdletBinding()]
     param(
-        [Parameter(Mandatory)]
-        [string]$InstanceName,
-        [Parameter(Mandatory)]
-        [string]$DatabaseName,
-        [Parameter(Mandatory)]
-        [string]$IntegratedSecurity,
-        [Parameter(Mandatory)]
-        [string]$userName,
-        [Parameter(Mandatory)]
-        [object]$sqlCommandObject)
+        [Parameter(Mandatory)][string]$InstanceName,
+        [Parameter(Mandatory)][string]$DatabaseName,
+        [Parameter(Mandatory)][string]$IntegratedSecurity,
+        [Parameter(Mandatory)][string]$userName,
+        [Parameter(Mandatory)][object]$sqlCommandObject)
     begin{
-        $sqlCommandObject
         $ErrorActionPreference = 'Stop'
         $connectionString   = "
             Data Source         =   $($InstanceName);
@@ -22,7 +17,6 @@ function Invoke-UDFSqlConnection {
         
         $sqlConnection  = New-Object System.Data.SqlClient.SqlConnection $connectionString
         if(-Not $($sqlConnection.State -like "Open")){
-            
             $sqlConnection.Open()
             Write-Verbose -message "SQL connection open" -Verbose
         }

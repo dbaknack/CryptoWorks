@@ -1,33 +1,22 @@
 Function Write-UDFLog{
     [CmdletBinding()]
-       Param (
-           [Parameter(
-               Mandatory=$true,
-               ValueFromPipeline=$true,
-               Position=0)]
-           [ValidateNotNullorEmpty()]
-           [String]$Message,
-   
-         [Parameter(Position=1)]
-           [ValidateSet("Information","Warning","Error","Debug","Verbose")]
-           [String]$Level = 'Information',
-   
-           [String]$Path = [IO.Path]::GetTempPath(),
-           [String]$Server,
-           [String]$Database,
-           [String]$Table,
-   
-           [Switch]$NoHost,
-           [Switch]$SQL,
-           [switch]$IntegratedSecurity,
-           [Switch]$File,
-           [decimal]$ElapsedTime_Milliseconds,
-           [string]$FunctionName,
-           [string]$FunctionStep,
-           [int]$StepID,
-           [string]$DateTimeEvent,
-           [string]$refDate
-
+    Param (
+      [Parameter(Mandatory=$true,ValueFromPipeline=$true,Position=0)][ValidateNotNullorEmpty()][String]$Message,
+      [Parameter(Position=1)][ValidateSet("Information","Warning","Error","Debug","Verbose")][String]$Level = 'Information',
+      [String]$Path = [IO.Path]::GetTempPath(),
+      [String]$Server,
+      [String]$Database,
+      [String]$Table,
+      [Switch]$NoHost,
+      [Switch]$SQL,
+      [switch]$IntegratedSecurity,
+      [Switch]$File,
+      [decimal]$ElapsedTime_Milliseconds,
+      [string]$FunctionName,
+      [string]$FunctionStep,
+      [int]$StepID,
+      [string]$DateTimeEvent,
+      [string]$refDate
        )
        Process {
            $DateFormat = "yyyy-MM-dd HH:mm:ss.ff"

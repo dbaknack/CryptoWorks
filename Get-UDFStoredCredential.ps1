@@ -69,52 +69,25 @@
 function Get-UDFStoredCredential
 {
     [CmdletBinding()]
-    Param
-    (
-        [Parameter(Mandatory=$true,Position=0,HelpMessage="The name of the credential.")]
-        [ValidateNotNullOrEmpty()]
-        [string]$Name,
-        [Parameter(Mandatory=$false,Position=1,HelpMessage="The path to the credential store.")]
-        [string]$StorePath,
-        [Parameter(Mandatory=$false,Position=2,HelpMessage="Save the supplied credential in the credential store, overwriting the existing credential.")]
-        [PSCredential]$Credential,
-        [Parameter(Mandatory=$false,Position=3,HelpMessage="The user name used in the credential when prompting.")]
-        [string]$UserName,
-        [Parameter(Mandatory=$false,Position=4,HelpMessage="The message that appears in the credential prompt.")]
-        [string]$Message,
-        [Parameter(Mandatory=$false,Position=5,HelpMessage="Do not prompt for the credential if it cannot be read and throw an exception.")]
-        [Switch]$DoNotPrompt,
-        [Parameter(Mandatory=$false,Position=6,HelpMessage="Reset credential by prompting for a new one.")]
-        [Switch]$Reset,
-        [Parameter(Mandatory=$false,Position=7,HelpMessage="Delete credential and do not prompt for a new one.")]
-        [Switch]$Delete
+    Param(
+        [Parameter( Mandatory = $true,  Position = 0, HelpMessage = "The name of the credential.")][ValidateNotNullOrEmpty()][string]$Name,
+        [Parameter( Mandatory = $false, Position = 1, HelpMessage = "The path to the credential store.")][string]$StorePath,
+        [Parameter( Mandatory = $false, Position = 2, HelpMessage = "Save the supplied credential in the credential store, overwriting the existing credential.")][PSCredential]$Credential,
+        [Parameter( Mandatory = $false, Position = 3, HelpMessage = "The user name used in the credential when prompting.")][string]$UserName,
+        [Parameter( Mandatory = $false, Position = 4, HelpMessage = "The message that appears in the credential prompt.")][string]$Message,
+        [Parameter( Mandatory = $false, Position = 5, HelpMessage = "Do not prompt for the credential if it cannot be read and throw an exception.")][Switch]$DoNotPrompt,
+        [Parameter( Mandatory = $false, Position = 6, HelpMessage = "Reset credential by prompting for a new one.")][Switch]$Reset,
+        [Parameter( Mandatory = $false, Position = 7, HelpMessage = "Delete credential and do not prompt for a new one.")][Switch]$Delete
     )
-
-    begin
-    {
-    }
-
-    process
-    {
+    begin{}
+    process{
         $ErrorActionPreference = "Stop"
-        try
-        {
-            if ($Name -notmatch "^\w\w*$")
-            {
-                throw "Name cannot contain whitespace or special characters."
-            }
-            if ([String]::IsNullOrEmpty($StorePath))
-            {
-                $p_StorePath = [environment]::GetFolderPath("mydocuments") + "\Credentials"
-            }
-            else
-            {
-                $p_StorePath = $StorePath
-            }
-            if (-Not (Test-Path -Path $p_StorePath -PathType Container))
-            {
-                New-Item -Path $p_StorePath -ItemType Directory | Out-Null
-            }
+        try{
+            if ($Name -notmatch "^\w\w*$")              {throw "Name cannot contain whitespace or special characters."}
+            if ([String]::IsNullOrEmpty($StorePath))    {$p_StorePath = [environment]::GetFolderPath("mydocuments") + "\Credentials"}
+            else{$p_StorePath = $StorePath}
+            if (-Not (Test-Path -Path $p_StorePath -PathType Container)){
+                New-Item -Path $p_StorePath -ItemType Directory | Out-Null}
             $p_UserNamePath = [String]::Format("{0}\{1}.username", $p_StorePath, $Name)
             $p_PasswordPath = [String]::Format("{0}\{1}.password", $p_StorePath, $Name)
             if ($Delete.IsPresent)
