@@ -2,15 +2,14 @@ $config = Get-Content -path E:\Credentials\EmailParams\Outbound.Emails.Config.js
 $Creds  = Get-UDFStoredCredential -Name EmailService
 
 $EmailSplat = @{
-    from = $config.from
-    to = $config.To
-    subject = $config.Subject
-    body = $config.Body
-    SmtpServer = $config.SmtpServer
-    port = $config.Port
-    usessl = $true
-    Credential = $Creds
+    from        = $config.from
+    to          = $config.To
+    subject     = $config.Subject
+    body        = $config.Body
+    SmtpServer  = $config.SmtpServer
+    port        = $config.Port
+    usessl      = $true
+    Credential  = $Creds
 
 }
-
 Send-MailMessage @EmailSplat

@@ -1,36 +1,25 @@
-Function Write-Log{
+Function Write-UDFLog{
     [CmdletBinding()]
-       Param (
-           [Parameter(
-               Mandatory=$true,
-               ValueFromPipeline=$true,
-               Position=0)]
-           [ValidateNotNullorEmpty()]
-           [String]$Message,
-   
-         [Parameter(Position=1)]
-           [ValidateSet("Information","Warning","Error","Debug","Verbose")]
-           [String]$Level = 'Information',
-   
-           [String]$Path = [IO.Path]::GetTempPath(),
-           [String]$Server,
-           [String]$Database,
-           [String]$Table,
-   
-           [Switch]$NoHost,
-           [Switch]$SQL,
-           [Switch]$File,
-           [decimal]$ElapsedTime_Milliseconds,
-           [string]$FunctionName,
-           [string]$FunctionStep,
-           [int]$StepID,
-           [string]$DateTimeEvent,
-           [string]$refDate
-
+    Param (
+      [Parameter(Mandatory=$true,ValueFromPipeline=$true,Position=0)][ValidateNotNullorEmpty()][String]$Message,
+      [Parameter(Position=1)][ValidateSet("Information","Warning","Error","Debug","Verbose")][String]$Level = 'Information',
+      [String]$Path = (get-location).path,
+      [String]$Server,
+      [String]$Database,
+      [String]$Table,
+      [Switch]$NoHost,
+      [Switch]$SQL,
+      [switch]$IntegratedSecurity,
+      [Switch]$File,
+      [decimal]$ElapsedTime_Milliseconds,
+      [string]$FunctionName,
+      [string]$FunctionStep,
+      [int]$StepID,
+      [string]$DateTimeEvent,
+      [string]$refDate
        )
        Process {
            $DateFormat = "yyyy-MM-dd HH:mm:ss.ff"
-           #$DateTimeInitiated
            If (-Not $NoHost) {
              Switch ($Level) {
                "information" {
@@ -58,12 +47,11 @@ Function Write-Log{
            }
    
            If ($File) {
-             Add-Content -Path (Join-Path $Path 'log.txt') -Value ("[{0}] ({1}) {2}" -F (Get-Date).toString($DateFormat), $Level, $Message)
+             Add-Content -Path (Join-Path $Path '\LOG\log.txt') -Value ("[{0}] ({1}) {2}" -F (Get-Date).toString($DateFormat), $Level, $Message)
   
   }
    
            If ($SQL) {
-            $DateFormat = "yyyy-MM-dd HH:mm:ss.ff"
             #$DateTimeInitiated = [datetime]::parseexact($DateTimeInitiated, 'yyyy-MM-dd HH:mm:ss.ff', $null).ToString('yyyy-MM-dd HH:mm:ss.ff')
              If (-Not $Server -Or -Not $Database -Or -Not $Table) {
                Write-Error "Missing Parameters"
@@ -71,7 +59,7 @@ Function Write-Log{
              }
               # define the connection string first
              $connection                  = New-Object System.Data.SqlClient.SqlConnection
-             $connection.ConnectionString = "Data Source=$Server;Initial Catalog=$Database;Integrated Security=SSPI;"
+             $connection.ConnectionString = "Data Source=$Server;Initial Catalog=$Database;Integrated Security=$($IntegratedSecurity);"
    
              If (-Not ($connection.State -like "Open")) {
                $connection.Open()
@@ -122,3 +110,6 @@ Function Write-Log{
            }
        }
    }
+
+   
+   Write-UDFLog -message 'test'-level 'information'  -file

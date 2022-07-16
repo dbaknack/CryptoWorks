@@ -1,64 +1,44 @@
-
 function Get-UDFIndexBlocks{
     [CmdletBinding()]
     param (
-        [switch]$StopWatchOn,
-        [switch]$LoggingOn,
-        [int]$RequestLimit = 5
+        [Parameter(Mandatory=$true)]
+        [int]$requestLimit
     )
-    begin {
-        # default params are controlled in the DefaultParams Function
-        # stop start if param given
-        $FunctionName       = $MyInvocation.MyCommand.name
+    begin{
+        $startofFunction = (get-date).ToString("yyyy-MM-dd HH:mm:ss.fff")
+        $StopWatch = [System.Diagnostics.Stopwatch]::new()
+        $StopWatch.Start()
 
-        
-        $refDate = New-UDFSQLLogIndex -processName $FunctionName -refDateTime
-
-        if($StopWatchOn){$StopWatch = [System.Diagnostics.Stopwatch]::new();   $StopWatch.Start()}
-
-        $Span              = @{}
-        $Span.offSet       = 0
-        $Span.day          = New-TimeSpan -Days 1
-        $Span.inBlocks     = $Span.day.TotalSeconds/15
-        $rootObject        = [ordered]@{}
-        $rootObject.blocks = New-Object System.Collections.Generic.List[pscustomobject]
+        $Span               = @{}
+        $Span.offSet        = 0
+        $Span.day           = New-TimeSpan -Days 1
+        $Span.inBlocks      = $Span.day.TotalSeconds/15
+        $rootObject         = [ordered]@{}
+        $rootObject.blocks  = New-Object System.Collections.Generic.List[pscustomobject]
+        $rootObject.functionstats = [ordered]@{}
+        #$rootObject.blocks.ID = [ordered]@{}
         $TimeSegment       = @{}
         $TimeSegment.Start = @{}
         $TimeSegment.End   = @{}
+
+        $DateTimeProps                              = @{}
+        $DateTimeProps.seedWeekDay                  = @{}
+        $DateTimeProps.seedWeekDay.Props            = @{}
+        $DateTimeProps.dateFormat                   = "yyyy-MM-dd 00:00:00.00"
+        $DateTimeProps.dateTimeSeed                 = ([DateTime]((Get-Date).AddDays($Span.offSet)).ToString($DateTimeProps.dateFormat)).ToString($DateTimeProps.dateFormat)
+        $DateTimeProps.seedWeekDay.Props.shortName  = ([DateTime]$DateTimeProps.dateTimeSeed).toString('ddd')
+        $DateTimeProps.seedWeekDay.Props.ASCII      = Convertto-UDFASCII -string $DateTimeProps.seedWeekDay.Props.shortName
+        $DateTimeProps.seedWeekofYear               = Get-UDFWeekofYear -date ([DateTime]$DateTimeProps.dateTimeSeed)
+        $DateTimeProps.seedMonth                    = [int]([DateTime]$DateTimeProps.dateTimeSeed).Month
+        $DateTimeProps.seedDayofMonth               = [int]([DateTime]$DateTimeProps.dateTimeSeed).Day
+        $DateTimeProps.seedDayofYear                = ([DateTime]$DateTimeProps.dateTimeSeed).DayOfYear
+        $DateTimeProps.seedYear                     = ([DateTime]$DateTimeProps.dateTimeSeed).Year
+
+
+        # funtion stats
         
-        $DateTimeProps                             = @{}
-        $DateTimeProps.seedWeekDay                 = @{}
-        $DateTimeProps.seedWeekDay.Props           = @{}
-        $DateTimeProps.dateFormat                  = "yyyy-MM-dd 00:00:00.00"
-        $DateTimeProps.dateTimeSeed                = ([DateTime]((Get-Date).AddDays($Span.offSet)).ToString($DateTimeProps.dateFormat )).ToString($DateTimeProps.dateFormat)
-        $DateTimeProps.seedWeekDay.Props.shortName = ([DateTime]$DateTimeProps.dateTimeSeed).toString('ddd')
-        $DateTimeProps.seedWeekDay.Props.ASCII    = Convertto-UDFASCII -string $DateTimeProps.seedWeekDay.Props.shortName
-        $DateTimeProps.seedWeekofYear              = Get-UDFWeekofYear -date ([DateTime]$DateTimeProps.dateTimeSeed)
-        $DateTimeProps.seedMonth                   = [int]([DateTime]$DateTimeProps.dateTimeSeed).Month
-        $DateTimeProps.seedDayofMonth              = [int]([DateTime]$DateTimeProps.dateTimeSeed).Day
-        $DateTimeProps.seedDayofYear               = ([DateTime]$DateTimeProps.dateTimeSeed).DayOfYear
-        $DateTimeProps.seedYear                    = ([DateTime]$DateTimeProps.dateTimeSeed).Year
-        # state
-        if($LoggingOn){
-            $subStringDate = ($DateTimeProps.dateTimeSeed).substring(0,10)
-            $logParams = @{
-              SQL                       = $true
-              Message                   = "Indexing date: {0}" -f $subStringDate
-              refDate                   = $refDate
-              DateTimeEvent             = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss.fff")
-              ElapsedTime_Milliseconds  = $StopWatch.Elapsed.TotalMilliseconds
-              FunctionName              = $FunctionName
-              StepID                    = 1
-              FunctionStep              = 'Initializing varaiables'
-              Level                     = 'Information'
-              Server                    = "MST3K\DEVINSTANCE"
-              Database                  = "CWDB"
-              Table                     = "Logging"
-            }
-          Write-Log @logParams | Out-Null
-        }
     }
-    process {
+    process{
         foreach($i in (1..($Span.inBlocks))){
             if($i -eq 1)    {$Start = [datetime]$DateTimeProps.dateTimeSeed}
             if(!($i -eq 1)) {$Start = $End}
@@ -70,12 +50,12 @@ function Get-UDFIndexBlocks{
             if($Start.Second -eq 30) {$SpanID = '03'}
             if($Start.Second -eq 45) {$SpanID = '04'}
         
-            $TimeSegment.Start.hour   = $Start.Hour
-            $TimeSegment.Start.minute = $Start.Minute
-            $TimeSegment.Start.second = $Start.Second
-            $TimeSegment.End.hour     = $end.Hour
-            $TimeSegment.End.minute   = $end.Minute
-            $TimeSegment.End.second   = $end.Second
+            $TimeSegment.Start.hour     = $Start.Hour
+            $TimeSegment.Start.minute   = $Start.Minute
+            $TimeSegment.Start.second   = $Start.Second
+            $TimeSegment.End.hour       = $end.Hour
+            $TimeSegment.End.minute     = $end.Minute
+            $TimeSegment.End.second     = $end.Second
         
             #weekofYear
             $woyID = $($DateTimeProps.seedWeekofYear)
@@ -135,11 +115,13 @@ function Get-UDFIndexBlocks{
                 $dowID += $x
             }
            
-            $RawData = "'$($RequestLimit)','$($SegmentID)','$($SpanID)','$($snID)','$($yearID)','$($monthID)','$($woyID)','$($doyID)','$($domID)','$($dayID)','$($hrID)','$($mnID)','$($Start.ToString("yyyy-MM-dd HH:mm:ss.00"))','$( $End.ToString("yyyy-MM-dd HH:mm:ss.00"))','$($($nameDayID))','$($dowID)','$($dayTypeID)'"
+            $RawData = "'$($requestLimit)','$($SegmentID)','$($SpanID)','$($snID)','$($yearID)','$($monthID)','$($woyID)','$($doyID)','$($domID)','$($dayID)','$($hrID)','$($mnID)','$($Start.ToString("yyyy-MM-dd HH:mm:ss.00"))','$( $End.ToString("yyyy-MM-dd HH:mm:ss.00"))','$($($nameDayID))','$($dowID)','$($dayTypeID)'"
+            $RawData2 = "$($requestLimit),$($SegmentID),$($SpanID),$($snID),$($yearID),$($monthID),$($woyID),$($doyID),$($domID),$($dayID),$($hrID),$($mnID),'$($Start.ToString("yyyy-MM-dd HH:mm:ss.00"))','$( $End.ToString("yyyy-MM-dd HH:mm:ss.00"))','$($($nameDayID))',$($dowID),'$($dayTypeID)'"
+            $rootObject.SQL += "$($RawData2),"
             $rootObject.blocks+= @{
                 "$SegmentID" = @{
                    'ObjectParams' = [ordered]@{
-                        RequestCounter = $($RequestLimit)
+                        RequestCounter = $($requestLimit)
                         SegmentID      = $($SegmentID)
                         SpanID         = $($SpanID)
                         SecondofMin    = $($snID)
@@ -157,32 +139,20 @@ function Get-UDFIndexBlocks{
                         DayofWeekAscii = $($dowID)
                         WeekDayDesc    = $($dayTypeID)
                    }
-                CSV = @($RawData)
                }
             }
         }
     }
+    
     end {
-        if($StopWatchOn){
-            if($LoggingOn){
-                $logParams = @{
-                  SQL                       = $true
-                  Message                   = "Parsing complete" -f $DateTimeProps.dateTimeSeed
-                  refDate                   = $refDate
-                  DateTimeEvent             = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss.fff")
-                  ElapsedTime_Milliseconds  = $StopWatch.Elapsed.TotalMilliseconds
-                  FunctionName              = $FunctionName
-                  StepID                    = 2
-                  FunctionStep              = 'Parsing'
-                  Level                     = 'Information'
-                  Server                    = "MST3K\DEVINSTANCE"
-                  Database                  = "CWDB"
-                  Table                     = "Logging"
-                }
-                Write-Log @logParams | Out-Null
-            }
-            $StopWatch.stop()
-        }
-        $rootObject | out-null
+        $INSERT = "INSERT INTO tableName VALUES("+"$($rootObject.SQL)".TrimEnd(",").replace("weekend',","weekend',`n")+")" 
+        $rootObject.sql = $INSERT
+        $StopWatch.stop()
+        $rootObject.functionstats.add('startOfFunction',                $startofFunction)
+        $rootObject.functionstats.add('endOfFunction',                (get-date).ToString('yyyy-MM-dd HH-mm-ss.fff'))
+        $rootObject.functionstats.add('TotalMilliseconds',  [math]::Round($StopWatch.Elapsed.TotalMilliseconds,2))
+        $rootObject.functionstats.add('TotalSeconds',       [math]::Round($StopWatch.Elapsed.TotalSeconds,2))
+        $rootObject.functionstats.add('TotalMinutes',       [math]::Round($StopWatch.Elapsed.TotalMinutes,2))
+        return $rootObject    
     }
 }

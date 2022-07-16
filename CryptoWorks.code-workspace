@@ -9,12 +9,7 @@
 			"PowerShell": {
 			  "source": "PowerShell",
 			  "icon": "terminal-powershell",
-			  "color":"terminal.ansiMagenta"
-			},
-			"pwsh":{
-				"source": "PowerShell",
-				"color": "terminal.ansiCyan",
-				"icon": "terminal-powershell"
+			  "color":"terminal.ansiCyan"
 			},
 			"Command Prompt": {
 			  "path": [
@@ -50,12 +45,12 @@
 			"tmux": {
 			  "path": "tmux",
 			  "icon": "terminal-tmux"
-			},
-			"pwsh": {
-			  "path": "pwsh",
-			  "icon": "terminal-powershell",
-			  "color": "terminal.ansiBlue"
 			}
-		  }
+		},
+		"powershell.codeFormatting.useCorrectCasing": true,
+		"powershell.integratedConsole.forceClearScrollbackBuffer": true,
+		"terminal.integrated.cursorBlinking": true,
+		"terminal.integrated.tabs.location": "left",
+		"terminal.integrated.tabs.showActiveTerminal": "always"
 	}
 }

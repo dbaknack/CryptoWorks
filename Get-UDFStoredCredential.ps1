@@ -69,112 +69,58 @@
 function Get-UDFStoredCredential
 {
     [CmdletBinding()]
-    Param
-    (
-        [Parameter(Mandatory=$true,Position=0,HelpMessage="The name of the credential.")]
-        [ValidateNotNullOrEmpty()]
-        [string]$Name,
-        [Parameter(Mandatory=$false,Position=1,HelpMessage="The path to the credential store.")]
-        [string]$StorePath,
-        [Parameter(Mandatory=$false,Position=2,HelpMessage="Save the supplied credential in the credential store, overwriting the existing credential.")]
-        [PSCredential]$Credential,
-        [Parameter(Mandatory=$false,Position=3,HelpMessage="The user name used in the credential when prompting.")]
-        [string]$UserName,
-        [Parameter(Mandatory=$false,Position=4,HelpMessage="The message that appears in the credential prompt.")]
-        [string]$Message,
-        [Parameter(Mandatory=$false,Position=5,HelpMessage="Do not prompt for the credential if it cannot be read and throw an exception.")]
-        [Switch]$DoNotPrompt,
-        [Parameter(Mandatory=$false,Position=6,HelpMessage="Reset credential by prompting for a new one.")]
-        [Switch]$Reset,
-        [Parameter(Mandatory=$false,Position=7,HelpMessage="Delete credential and do not prompt for a new one.")]
-        [Switch]$Delete
+    Param(
+        [Parameter( Mandatory = $true,  Position = 0, HelpMessage = "The name of the credential.")][ValidateNotNullOrEmpty()][string]$Name,
+        [Parameter( Mandatory = $false, Position = 1, HelpMessage = "The path to the credential store.")][string]$StorePath,
+        [Parameter( Mandatory = $false, Position = 2, HelpMessage = "Save the supplied credential in the credential store, overwriting the existing credential.")][PSCredential]$Credential,
+        [Parameter( Mandatory = $false, Position = 3, HelpMessage = "The user name used in the credential when prompting.")][string]$UserName,
+        [Parameter( Mandatory = $false, Position = 4, HelpMessage = "The message that appears in the credential prompt.")][string]$Message,
+        [Parameter( Mandatory = $false, Position = 5, HelpMessage = "Do not prompt for the credential if it cannot be read and throw an exception.")][Switch]$DoNotPrompt,
+        [Parameter( Mandatory = $false, Position = 6, HelpMessage = "Reset credential by prompting for a new one.")][Switch]$Reset,
+        [Parameter( Mandatory = $false, Position = 7, HelpMessage = "Delete credential and do not prompt for a new one.")][Switch]$Delete
     )
-
-    begin
-    {
-    }
-
-    process
-    {
+    begin{}
+    process{
         $ErrorActionPreference = "Stop"
-        try
-        {
-            if ($Name -notmatch "^\w\w*$")
-            {
-                throw "Name cannot contain whitespace or special characters."
-            }
-            if ([String]::IsNullOrEmpty($StorePath))
-            {
-                $p_StorePath = [environment]::GetFolderPath("mydocuments") + "\Credentials"
-            }
-            else
-            {
-                $p_StorePath = $StorePath
-            }
-            if (-Not (Test-Path -Path $p_StorePath -PathType Container))
-            {
-                New-Item -Path $p_StorePath -ItemType Directory | Out-Null
-            }
+        try{
+            if ($Name -notmatch "^\w\w*$")              {throw "Name cannot contain whitespace or special characters."}
+            if ([String]::IsNullOrEmpty($StorePath))    {$p_StorePath = [environment]::GetFolderPath("mydocuments") + "\Credentials"}
+            else{$p_StorePath = $StorePath}
+            if (-Not (Test-Path -Path $p_StorePath -PathType Container)){
+                New-Item -Path $p_StorePath -ItemType Directory | Out-Null}
             $p_UserNamePath = [String]::Format("{0}\{1}.username", $p_StorePath, $Name)
             $p_PasswordPath = [String]::Format("{0}\{1}.password", $p_StorePath, $Name)
             if ($Delete.IsPresent)
             {
-                if (Test-Path -Path $p_UserNamePath -PathType Leaf)
-                {
-                    Remove-Item -Path $p_UserNamePath -Force
-                }
-                if (Test-Path -Path $p_PasswordPath -PathType Leaf)
-                {
-                    Remove-Item -Path $p_PasswordPath -Force
-                }
+                if (Test-Path -Path $p_UserNamePath -PathType Leaf){ Remove-Item -Path $p_UserNamePath -Force }
+                if (Test-Path -Path $p_PasswordPath -PathType Leaf){ Remove-Item -Path $p_PasswordPath -Force }
                 return
             }
-            if ($Credential -ne $null)
-            {
+            if ($Credential -ne $null){
                 $Credential.UserName | Out-File $p_UserNamePath -Force
                 $Credential.Password | ConvertFrom-SecureString | Out-File $p_PasswordPath -Force
                 return $Credential
             }
-            try
-            {
-                if ($Reset.IsPresent)
-                {
-                    throw "Request new credential"
-                }
-                $p_UserName = Get-Content -Path $p_UserNamePath
-                $p_Password = Get-Content -Path $p_PasswordPath | ConvertTo-SecureString
-                $p_Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $p_UserName, $p_Password
+            try{
+                if ($Reset.IsPresent){ throw "Request new credential" }
+                $p_UserName     = Get-Content -Path $p_UserNamePath
+                $p_Password     = Get-Content -Path $p_PasswordPath | ConvertTo-SecureString
+                $p_Credential   = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $p_UserName, $p_Password
                 return $p_Credential
-            }
-            catch
-            {
-                if ($DoNotPrompt.IsPresent)
-                {
-                    throw "Cannot read credential, and prompting for a new credential is not allowed."
-                }
+            }catch{
+                if ($DoNotPrompt.IsPresent){throw "Cannot read credential, and prompting for a new credential is not allowed."}
                 if ([String]::IsNullOrEmpty($Message))
-                {
-                    $p_Message = "Please enter credential for $Name"
-                }
-                else
-                {
+                {$p_Message = "Please enter credential for $Name"
+                }else{
                     $p_Message = $Message
                 }
                 $p_Args = @{}
-                if ([String]::IsNullOrEmpty($UserName) -eq $false)
-                {
-                    $p_Args = @{ "UserName" = "$UserName"}
-                }
-                else
-                {
-                    if ([String]::IsNullOrEmpty($p_UserName) -eq $false)
-                    {
-                        $p_Args = @{ "UserName" = "$p_UserName"}
-                    }
+                if ([String]::IsNullOrEmpty($UserName) -eq $false){$p_Args = @{ "UserName" = "$UserName"}}
+                else{
+                    if ([String]::IsNullOrEmpty($p_UserName) -eq $false){ $p_Args = @{ "UserName" = "$p_UserName"} }
                 }
                 $p_Credential = Get-Credential -Message $p_Message @p_Args
-                if ($p_Credential -ne $null)
-                {
+                if ($p_Credential -ne $null){
                     $p_Credential.UserName | Out-File $p_UserNamePath -Force
                     $p_Credential.Password | ConvertFrom-SecureString | Out-File $p_PasswordPath -Force
                 }
