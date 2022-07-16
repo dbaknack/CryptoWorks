@@ -1,8 +1,11 @@
 function Get-UDFIndexBlocks{
     [CmdletBinding()]
     param (
+        [Parameter(Mandatory=$true)]
+        [int]$requestLimit
     )
     begin{
+        $startofFunction = (get-date).ToString("yyyy-MM-dd HH:mm:ss.fff")
         $StopWatch = [System.Diagnostics.Stopwatch]::new()
         $StopWatch.Start()
 
@@ -12,7 +15,7 @@ function Get-UDFIndexBlocks{
         $Span.inBlocks      = $Span.day.TotalSeconds/15
         $rootObject         = [ordered]@{}
         $rootObject.blocks  = New-Object System.Collections.Generic.List[pscustomobject]
-
+        $rootObject.functionstats = [ordered]@{}
         #$rootObject.blocks.ID = [ordered]@{}
         $TimeSegment       = @{}
         $TimeSegment.Start = @{}
@@ -30,6 +33,10 @@ function Get-UDFIndexBlocks{
         $DateTimeProps.seedDayofMonth               = [int]([DateTime]$DateTimeProps.dateTimeSeed).Day
         $DateTimeProps.seedDayofYear                = ([DateTime]$DateTimeProps.dateTimeSeed).DayOfYear
         $DateTimeProps.seedYear                     = ([DateTime]$DateTimeProps.dateTimeSeed).Year
+
+
+        # funtion stats
+        
     }
     process{
         foreach($i in (1..($Span.inBlocks))){
@@ -108,11 +115,13 @@ function Get-UDFIndexBlocks{
                 $dowID += $x
             }
            
-            $RawData = "'5','$($segmentEnum)','$($SpanID)','$($snID)','$($yearID)','$($monthID)','$($woyID)','$($doyID)','$($domID)','$($dayID)','$($hrID)','$($mnID)','$($Start.ToString("yyyy-MM-dd HH:mm:ss.00"))','$( $End.ToString("yyyy-MM-dd HH:mm:ss.00"))','$($($nameDayID))','$($dowID)','$($dayTypeID)'"
+            $RawData = "'$($requestLimit)','$($SegmentID)','$($SpanID)','$($snID)','$($yearID)','$($monthID)','$($woyID)','$($doyID)','$($domID)','$($dayID)','$($hrID)','$($mnID)','$($Start.ToString("yyyy-MM-dd HH:mm:ss.00"))','$( $End.ToString("yyyy-MM-dd HH:mm:ss.00"))','$($($nameDayID))','$($dowID)','$($dayTypeID)'"
+            $RawData2 = "$($requestLimit),$($SegmentID),$($SpanID),$($snID),$($yearID),$($monthID),$($woyID),$($doyID),$($domID),$($dayID),$($hrID),$($mnID),'$($Start.ToString("yyyy-MM-dd HH:mm:ss.00"))','$( $End.ToString("yyyy-MM-dd HH:mm:ss.00"))','$($($nameDayID))',$($dowID),'$($dayTypeID)'"
+            $rootObject.SQL += "$($RawData2),"
             $rootObject.blocks+= @{
                 "$SegmentID" = @{
                    'ObjectParams' = [ordered]@{
-                        RequestCounter = 5
+                        RequestCounter = $($requestLimit)
                         SegmentID      = $($SegmentID)
                         SpanID         = $($SpanID)
                         SecondofMin    = $($snID)
@@ -130,15 +139,20 @@ function Get-UDFIndexBlocks{
                         DayofWeekAscii = $($dowID)
                         WeekDayDesc    = $($dayTypeID)
                    }
-                CSV = @($RawData)
                }
             }
         }
     }
     
     end {
-        "$($StopWatch.Elapsed.TotalMilliseconds  ) Elapsed millisec(s) > complete" 
+        $INSERT = "INSERT INTO tableName VALUES("+"$($rootObject.SQL)".TrimEnd(",").replace("weekend',","weekend',`n")+")" 
+        $rootObject.sql = $INSERT
         $StopWatch.stop()
-        $rootObject    
+        $rootObject.functionstats.add('startOfFunction',                $startofFunction)
+        $rootObject.functionstats.add('endOfFunction',                (get-date).ToString('yyyy-MM-dd HH-mm-ss.fff'))
+        $rootObject.functionstats.add('TotalMilliseconds',  [math]::Round($StopWatch.Elapsed.TotalMilliseconds,2))
+        $rootObject.functionstats.add('TotalSeconds',       [math]::Round($StopWatch.Elapsed.TotalSeconds,2))
+        $rootObject.functionstats.add('TotalMinutes',       [math]::Round($StopWatch.Elapsed.TotalMinutes,2))
+        return $rootObject    
     }
 }

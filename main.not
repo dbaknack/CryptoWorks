@@ -1,5 +1,12 @@
+$modulePaths = $Env:PSModulePath.split(":")
+if(!($modulePaths -contains (Get-Location).path)){
+    $Env:PSModulePath +=  ":/Users/alexhernandez/LocalRepo/CryptoWorks"
+}
+Get-PSRepository 
+Import-Module
 $modules = ((Get-Module) | Select-Object name)
-
+Get-Module -ListAvailable
+Install-Module 
 foreach($module in $modules){
     if($module -match 'CryptoWorks'){
         $isInstalled = $true
@@ -25,3 +32,20 @@ $SQLStatement =         "
 New-UDFSQLCommand -DML 'SELECT' -TableName 'LogLookUp' -SQLStatement $SQLStatement -Verbose
 $Env:PSModulePath +=(':/users/alexhernandez/localrepo/cryptoworks/')
 $Env:PSModulePath.Split(":")
+
+$assets = Import-PowerShellDataFile .\requests.ps1
+$assets.cardano.ticker = 's'
+
+
+$blocks = Get-UDFIndexBlocks
+$blocks.blocks.values.ObjectParams | format-table
+#
+
+### example of a registred event
+New-Event -SourceIdentifier Timer -Sender windows.timer -MessageData "Test"
+
+$getthis = Get-Event -SourceIdentifier 'scriptblock'
+$getthis.MessageData
+
+$sender = 'test'
+New-Event -SourceIdentifier 'ScriptBlock' -Sender 'this' -MessageData $sender

@@ -3,7 +3,7 @@ Function Write-UDFLog{
     Param (
       [Parameter(Mandatory=$true,ValueFromPipeline=$true,Position=0)][ValidateNotNullorEmpty()][String]$Message,
       [Parameter(Position=1)][ValidateSet("Information","Warning","Error","Debug","Verbose")][String]$Level = 'Information',
-      [String]$Path = [IO.Path]::GetTempPath(),
+      [String]$Path = (get-location).path,
       [String]$Server,
       [String]$Database,
       [String]$Table,
@@ -20,7 +20,6 @@ Function Write-UDFLog{
        )
        Process {
            $DateFormat = "yyyy-MM-dd HH:mm:ss.ff"
-           #$DateTimeInitiated
            If (-Not $NoHost) {
              Switch ($Level) {
                "information" {
@@ -48,12 +47,11 @@ Function Write-UDFLog{
            }
    
            If ($File) {
-             Add-Content -Path (Join-Path $Path 'log.txt') -Value ("[{0}] ({1}) {2}" -F (Get-Date).toString($DateFormat), $Level, $Message)
+             Add-Content -Path (Join-Path $Path '\LOG\log.txt') -Value ("[{0}] ({1}) {2}" -F (Get-Date).toString($DateFormat), $Level, $Message)
   
   }
    
            If ($SQL) {
-            $DateFormat = "yyyy-MM-dd HH:mm:ss.ff"
             #$DateTimeInitiated = [datetime]::parseexact($DateTimeInitiated, 'yyyy-MM-dd HH:mm:ss.ff', $null).ToString('yyyy-MM-dd HH:mm:ss.ff')
              If (-Not $Server -Or -Not $Database -Or -Not $Table) {
                Write-Error "Missing Parameters"
@@ -112,3 +110,6 @@ Function Write-UDFLog{
            }
        }
    }
+
+   
+   Write-UDFLog -message 'test'-level 'information'  -file
